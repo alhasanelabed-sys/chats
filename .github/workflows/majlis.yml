@@ -1,0 +1,51 @@
+name: Majlis Android and backend
+
+on:
+  push:
+    branches: [app/majlis-android]
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  android:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: '17'
+      - name: Install Android SDK packages
+        run: '"$ANDROID_HOME/cmdline-tools/latest/bin/sdkmanager" "platforms;android-35" "build-tools;35.0.0"'
+      - name: Build and verify debug APK
+        run: bash scripts/build-android.sh
+      - uses: actions/upload-artifact@v4
+        with:
+          name: majlis-debug-apk
+          path: dist/majlis-debug.apk
+          if-no-files-found: error
+          retention-days: 14
+
+  backend:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    defaults:
+      run:
+        working-directory: backend
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      - name: Install FFmpeg and Python dependencies
+        run: |
+          sudo apt-get update -qq
+          sudo apt-get install -y ffmpeg
+          python -m pip install -r requirements.txt
+      - name: Verify backend contracts without live credentials
+        run: |
+          python -m unittest discover -s tests -v
+          python -m compileall -q app tests

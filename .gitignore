@@ -1,0 +1,21 @@
+# Android local setup and generated output
+android/.gradle/
+android/local.properties
+android/**/build/
+.idea/
+*.iml
+tools/
+dist/*.apk
+dist/*.apk.idsig
+
+# Service configuration, caches, and uploaded meeting audio
+.env
+.env.*
+!.env.example
+__pycache__/
+.pytest_cache/
+*.py[cod]
+backend/.venv/
+backend/data/
+backend/uploads/
+backend/tmp/

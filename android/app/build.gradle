@@ -1,0 +1,32 @@
+plugins {
+    id 'com.android.application'
+}
+
+android {
+    namespace 'com.majlis.app'
+    compileSdk 35
+    buildToolsVersion '35.0.0'
+
+    defaultConfig {
+        applicationId 'com.majlis.app'
+        minSdk 26
+        targetSdk 35
+        versionCode 1
+        versionName '0.1'
+    }
+
+    compileOptions {
+        // Java 8 bytecode keeps both the Gradle and offline SDK builds aligned.
+        sourceCompatibility JavaVersion.VERSION_1_8
+        targetCompatibility JavaVersion.VERSION_1_8
+    }
+
+    buildTypes {
+        debug {
+            debuggable true
+        }
+        release {
+            minifyEnabled false
+        }
+    }
+}
