@@ -65,8 +65,8 @@ fi
 # This compiler entry point also works when the JDK exposes javac as a module
 # through java but has no separate javac launcher on PATH.
 "$JAVA_COMMAND" com.sun.tools.javac.Main \
-    -encoding UTF-8 -source 8 -target 8 \
-    -bootclasspath "$PLATFORM_JAR" \
+    -encoding UTF-8 --release 8 \
+    -classpath "$PLATFORM_JAR" \
     -d "$BUILD_DIR/classes" "${java_sources[@]}"
 
 class_files=()
