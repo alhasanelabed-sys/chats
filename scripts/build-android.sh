@@ -51,7 +51,7 @@ PY
     --java "$BUILD_DIR/generated" \
     --min-sdk-version 26 --target-sdk-version 35 \
     --version-code 1 --version-name 0.1 \
-    -R "$BUILD_DIR/resources.zip"
+    "$BUILD_DIR/resources.zip"
 
 java_sources=()
 while IFS= read -r -d '' source_file; do
