@@ -4,7 +4,7 @@
 
 ## تنزيل ملف التثبيت
 
-[تنزيل majlis-debug-apk من GitHub Actions](https://github.com/alhasanelabed-sys/chats/actions/runs/37980802110/artifacts/11641266892). يتطلب تنزيل Artifacts تسجيل الدخول إلى GitHub. فك ضغط الملف ثم ثبّت `majlis-debug.apk` على هاتف أندرويد 8.0 فأحدث. يمكن تجربة الاجتماع الجاهز وتسجيل الصوت دون إعداد الخادم؛ التحليل الحقيقي يحتاج إعداد الخدمة الموضح أدناه. ينتهي حفظ هذه النسخة في Actions في 23 أكتوبر 2026؛ يستطيع البناء الآلي إنشاء نسخة جديدة.
+[تنزيل majlis-debug.apk مباشرة](https://github.com/alhasanelabed-sys/chats/raw/refs/heads/app/majlis-android/downloads/majlis-debug.apk). هذا رابط عام لملف APK داخل فرع التطبيق، ولا يحتاج تسجيل الدخول إلى GitHub. ثبّت الملف على هاتف أندرويد 8.0 فأحدث. يمكن تجربة الاجتماع الجاهز وتسجيل الصوت دون إعداد الخادم؛ التحليل الحقيقي يحتاج إعداد الخدمة الموضح أدناه. يحتفظ فرع التطبيق بملف التثبيت، بينما تبقى نسخ GitHub Actions الإضافية متاحة 14 يومًا وتتطلب تسجيل الدخول.
 
 ## وظائف النموذج
 
@@ -28,7 +28,7 @@
 
 يوجد مسار بناء من سطر الأوامر باستخدام SDK مثبت محليًا، موضح في `scripts/build-android.sh`. يكتب APK في `dist/majlis-debug.apk`. النسخة التجريبية تستخدم مفتاح debug محليًا، وليست إصدارًا للنشر في Google Play. أدوات SDK ومفاتيح توقيع debug لا تدخل في حزمة المصدر.
 
-على فرع `app/majlis-android` يشغّل GitHub Actions بناء أندرويد واختبارات الخادم تلقائيًا. بعد نجاح مهمة `android`، نزّل الملف `majlis-debug-apk` من قسم Artifacts في تشغيل الـ Actions؛ يحتوي `majlis-debug.apk`. لا تتطلب اختبارات الخادم أو بناء APK مفتاح OpenAI. يحتفظ Actions بملف التثبيت مدة 14 يومًا.
+على فرع `app/majlis-android` يشغّل GitHub Actions بناء أندرويد واختبارات الخادم تلقائيًا. بعد نجاح مهمة `android` يحفظ ملف APK في `downloads/majlis-debug.apk` على فرع التطبيق، ويتيح أيضًا نسخة مضغوطة باسم `majlis-debug-apk` في قسم Artifacts. لا تتطلب اختبارات الخادم أو بناء APK مفتاح OpenAI. يحتفظ Actions بملف التثبيت مدة 14 يومًا.
 
 ## إعداد التحليل الحقيقي
 
