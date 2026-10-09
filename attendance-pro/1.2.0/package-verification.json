@@ -1,0 +1,11 @@
+{
+  "version": "1.2.0",
+  "archive": "iug-attendance-pro-1.2.0.zip",
+  "size_bytes": 2732978,
+  "sha256": "afaca9ba5452716df6f78a7a04e9f13efd3dcfff3afe22b45d1d4737ebb3a6a5",
+  "file_count": 113,
+  "crc_and_all_file_hashes": "passed",
+  "runtime_data_included": false,
+  "clean_extracted_smoke": "passed",
+  "verified_runtime_source_matches_tested_source": true
+}
