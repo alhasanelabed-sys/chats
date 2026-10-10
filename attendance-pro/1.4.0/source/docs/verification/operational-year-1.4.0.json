@@ -1,0 +1,224 @@
+{
+  "status": "passed",
+  "version": "1.4.0",
+  "environment": {
+    "python": "3.12.14",
+    "platform": "Linux-6.18.44-x86_64-with-glibc2.41",
+    "cpu_count": 3
+  },
+  "employees": 10000,
+  "devices": 20,
+  "days": 365,
+  "base_punches": 7300000,
+  "isolated_temporary_database": true,
+  "physical_devices_verified": false,
+  "transport": "concurrent ASGI HTTP requests",
+  "started_at_utc": "2026-10-10T12:56:47.980228+00:00",
+  "seed_seconds": 257.10639,
+  "date_range": {
+    "start": "2025-10-09",
+    "end": "2026-10-08"
+  },
+  "initial_reports": [
+    {
+      "key": "transactions",
+      "seconds": 2.940276,
+      "total": 7300000,
+      "page_rows": 200,
+      "validation": "passed"
+    },
+    {
+      "key": "daily",
+      "seconds": 6.496982,
+      "total": 3650000,
+      "page_rows": 200,
+      "validation": "passed"
+    },
+    {
+      "key": "summary",
+      "seconds": 17.369154,
+      "total": 10000,
+      "page_rows": 200,
+      "validation": "passed"
+    }
+  ],
+  "mixed_workload": {
+    "seconds": 2.554303,
+    "fresh_requests": 20,
+    "report_requests": 6,
+    "samples": [
+      {
+        "kind": "fresh_upload",
+        "device": "SCALE0000",
+        "seconds": 1.796981,
+        "status": 200
+      },
+      {
+        "kind": "fresh_upload",
+        "device": "SCALE0001",
+        "seconds": 0.773481,
+        "status": 200
+      },
+      {
+        "kind": "fresh_upload",
+        "device": "SCALE0002",
+        "seconds": 2.531258,
+        "status": 200
+      },
+      {
+        "kind": "fresh_upload",
+        "device": "SCALE0003",
+        "seconds": 1.542206,
+        "status": 200
+      },
+      {
+        "kind": "fresh_upload",
+        "device": "SCALE0004",
+        "seconds": 0.4798,
+        "status": 200
+      },
+      {
+        "kind": "fresh_upload",
+        "device": "SCALE0005",
+        "seconds": 2.220136,
+        "status": 200
+      },
+      {
+        "kind": "fresh_upload",
+        "device": "SCALE0006",
+        "seconds": 1.448529,
+        "status": 200
+      },
+      {
+        "kind": "fresh_upload",
+        "device": "SCALE0007",
+        "seconds": 1.976356,
+        "status": 200
+      },
+      {
+        "kind": "fresh_upload",
+        "device": "SCALE0008",
+        "seconds": 1.130563,
+        "status": 200
+      },
+      {
+        "kind": "fresh_upload",
+        "device": "SCALE0009",
+        "seconds": 1.799918,
+        "status": 200
+      },
+      {
+        "kind": "fresh_upload",
+        "device": "SCALE0010",
+        "seconds": 2.201423,
+        "status": 200
+      },
+      {
+        "kind": "fresh_upload",
+        "device": "SCALE0011",
+        "seconds": 0.865863,
+        "status": 200
+      },
+      {
+        "kind": "fresh_upload",
+        "device": "SCALE0012",
+        "seconds": 0.937347,
+        "status": 200
+      },
+      {
+        "kind": "fresh_upload",
+        "device": "SCALE0013",
+        "seconds": 0.564274,
+        "status": 200
+      },
+      {
+        "kind": "fresh_upload",
+        "device": "SCALE0014",
+        "seconds": 0.37731,
+        "status": 200
+      },
+      {
+        "kind": "fresh_upload",
+        "device": "SCALE0015",
+        "seconds": 1.975718,
+        "status": 200
+      },
+      {
+        "kind": "fresh_upload",
+        "device": "SCALE0016",
+        "seconds": 1.202851,
+        "status": 200
+      },
+      {
+        "kind": "fresh_upload",
+        "device": "SCALE0017",
+        "seconds": 0.712418,
+        "status": 200
+      },
+      {
+        "kind": "fresh_upload",
+        "device": "SCALE0018",
+        "seconds": 1.043432,
+        "status": 200
+      },
+      {
+        "kind": "fresh_upload",
+        "device": "SCALE0019",
+        "seconds": 1.456419,
+        "status": 200
+      },
+      {
+        "kind": "report",
+        "key": "transactions",
+        "seconds": 0.60991,
+        "status": 200
+      },
+      {
+        "kind": "report",
+        "key": "daily",
+        "seconds": 0.603236,
+        "status": 200
+      },
+      {
+        "kind": "report",
+        "key": "summary",
+        "seconds": 0.59115,
+        "status": 200
+      },
+      {
+        "kind": "report",
+        "key": "transactions",
+        "seconds": 0.610727,
+        "status": 200
+      },
+      {
+        "kind": "report",
+        "key": "daily",
+        "seconds": 0.483377,
+        "status": 200
+      },
+      {
+        "kind": "report",
+        "key": "summary",
+        "seconds": 0.586127,
+        "status": 200
+      }
+    ]
+  },
+  "fresh_ingestion": {
+    "new_records": 20000,
+    "punches_after": 7320000,
+    "reupload_records": 20000,
+    "reupload_seconds": 2.05445,
+    "deduplication": "passed",
+    "raw_archiving": "passed",
+    "write_back": false
+  },
+  "monitor": {
+    "today": "2026-10-10",
+    "expected": 20000
+  },
+  "storage_synchronous": "FULL",
+  "temporary_database_removed": true,
+  "total_seconds": 290.210213
+}

@@ -1,0 +1,41 @@
+{
+  "status": "passed",
+  "started_at_utc": "2026-10-10T12:53:06.214Z",
+  "checks": [
+    "today-only monitor: all 225 records across pages, search and 48px photos",
+    "grouped searchable settings save, device writing remains off",
+    "full 225-row print beyond screen page, portrait and landscape PDFs, no horizontal clipping",
+    "background full CSV export and actual 226-line browser download",
+    "attendance explanation dialog uses backend decisions and raw evidence",
+    "dated attendance rules saved and listed through real UI",
+    "device direction guide distinguishes reads, writes and enrollment distribution",
+    "durable intake and rejected-line details visible",
+    "health shows real storage mode and unmeasured physical clocks",
+    "full demo: 24 employees, 3 devices, live simulation, physical routes blocked, distinct session cookies, main rows and write flag unchanged, stop and delete",
+    "390px Arabic mobile layout, compact photos, bottom navigation and accessible drawer without overflow",
+    "English mobile layout and translations"
+  ],
+  "console_errors": [],
+  "screenshots": [],
+  "main_sentinel": {
+    "before": {
+      "counts": {
+        "employee": 40,
+        "device": 4,
+        "transaction": 386
+      },
+      "rows_sha256": "6f867e1cb536858bec38b69ae120864008624558f3e29a53df431f8978caf869",
+      "write_back": false
+    },
+    "after": {
+      "counts": {
+        "employee": 40,
+        "device": 4,
+        "transaction": 386
+      },
+      "rows_sha256": "6f867e1cb536858bec38b69ae120864008624558f3e29a53df431f8978caf869",
+      "write_back": false
+    },
+    "unchanged": true
+  }
+}

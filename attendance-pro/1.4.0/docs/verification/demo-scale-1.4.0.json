@@ -1,0 +1,19 @@
+{
+  "status": "passed",
+  "employees": 10000,
+  "devices": 20,
+  "days": 30,
+  "physical_devices_verified": false,
+  "seed_and_ready_seconds": 15.698,
+  "today_movements": 10000,
+  "database_counts": {
+    "employees": 10000,
+    "devices": 20,
+    "transactions": 590000,
+    "today_transactions": 10000
+  },
+  "production_sentinel_unchanged": true,
+  "production_write_back_unchanged": true,
+  "temporary_database_removed": true,
+  "total_seconds": 16.338
+}

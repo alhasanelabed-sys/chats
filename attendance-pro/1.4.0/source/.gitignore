@@ -1,0 +1,7 @@
+data/
+.venv/
+hader.ini
+__pycache__/
+*.pyc
+.pytest_cache/
+tools/cloudflared.exe

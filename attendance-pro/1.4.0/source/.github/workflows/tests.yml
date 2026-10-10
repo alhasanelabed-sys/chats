@@ -1,0 +1,28 @@
+name: Tests
+
+on:
+  push:
+  pull_request:
+  workflow_dispatch:
+
+jobs:
+  test:
+    strategy:
+      matrix:
+        os: [ubuntu-latest, windows-latest]
+    runs-on: ${{ matrix.os }}
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+      - run: python -m pip install -r requirements-dev.txt
+      - run: python -m pytest -q tests
+      - name: start.bat sets everything up on a clean machine
+        if: runner.os == 'Windows'
+        shell: cmd
+        env:
+          HADER_BOOTSTRAP_ONLY: "1"
+        run: |
+          call start.bat
+          .venv\Scripts\python.exe -c "import fastapi, uvicorn, sqlalchemy, openpyxl; print('start.bat OK')"

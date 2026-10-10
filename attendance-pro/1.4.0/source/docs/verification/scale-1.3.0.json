@@ -1,0 +1,128 @@
+{
+  "status": "passed",
+  "started_at_utc": "2026-10-10T08:48:30.202516+00:00",
+  "environment": {
+    "python": "3.12.14",
+    "platform": "Linux-6.18.44-x86_64-with-glibc2.41",
+    "cpu_count": 3
+  },
+  "isolated_temporary_database": true,
+  "physical_devices_verified": false,
+  "tcp_write_back": false,
+  "employees": 10000,
+  "devices": 20,
+  "days": 30,
+  "repeat": 3,
+  "version": "1.3.0",
+  "punches": 600000,
+  "options": {
+    "employees": 10000,
+    "devices": 20,
+    "days": 30,
+    "repeat": 3,
+    "export_csv": true,
+    "ingestion": true,
+    "keep_write_off": true
+  },
+  "date_range": {
+    "start": "2026-09-09",
+    "end": "2026-10-08"
+  },
+  "seed_seconds": 10.725416,
+  "reports": {
+    "transactions": {
+      "median_seconds": 0.197606,
+      "min_seconds": 0.197249,
+      "max_seconds": 0.216998,
+      "samples_seconds": [
+        0.216998,
+        0.197606,
+        0.197249
+      ],
+      "total": 600000,
+      "page_size": 200,
+      "validation": "passed"
+    },
+    "summary": {
+      "median_seconds": 0.708437,
+      "min_seconds": 0.706115,
+      "max_seconds": 0.709823,
+      "samples_seconds": [
+        0.708437,
+        0.706115,
+        0.709823
+      ],
+      "total": 10000,
+      "page_size": 200,
+      "validation": "passed"
+    },
+    "daily": {
+      "median_seconds": 0.041013,
+      "min_seconds": 0.039661,
+      "max_seconds": 0.062709,
+      "samples_seconds": [
+        0.041013,
+        0.039661,
+        0.062709
+      ],
+      "total": 300000,
+      "page_size": 200,
+      "validation": "passed"
+    },
+    "calculation_probe_employee_codes": [
+      "1",
+      "20",
+      "10000"
+    ]
+  },
+  "export": {
+    "seconds": 24.269112,
+    "size_bytes": 42767339,
+    "data_rows": 600000,
+    "rows_including_header": 600001,
+    "validation_seconds": 3.237872,
+    "validation": "passed",
+    "temporary_csv_removed_on_exit": false,
+    "retained_csv": true,
+    "filename": "transactions.csv"
+  },
+  "ingestion": {
+    "seconds": 0.613832,
+    "parallel_devices": 20,
+    "requests": 20,
+    "http_200_replies": 20,
+    "reuploaded_records": 20000,
+    "punches_before": 600000,
+    "punches_after": 600000,
+    "request_latency": {
+      "median_seconds": 0.440789,
+      "min_seconds": 0.11018,
+      "max_seconds": 0.593969,
+      "samples_seconds": [
+        0.344294,
+        0.370932,
+        0.51713,
+        0.502353,
+        0.406805,
+        0.474773,
+        0.593664,
+        0.504145,
+        0.362235,
+        0.11018,
+        0.325902,
+        0.58308,
+        0.48843,
+        0.38127,
+        0.582862,
+        0.514753,
+        0.306089,
+        0.593969,
+        0.389788,
+        0.273276
+      ]
+    },
+    "validation": "passed",
+    "physical_devices_verified": false
+  },
+  "total_seconds": 44.117808
+}

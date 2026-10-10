@@ -1,0 +1,12 @@
+{
+  "name": "حضوري — My attendance",
+  "short_name": "حضوري",
+  "start_url": "/me",
+  "scope": "/me",
+  "display": "standalone",
+  "background_color": "#f3f5f8",
+  "theme_color": "#0e8f86",
+  "dir": "rtl",
+  "lang": "ar",
+  "icons": [{ "src": "/static/me/icon.svg", "sizes": "any", "type": "image/svg+xml", "purpose": "any maskable" }]
+}

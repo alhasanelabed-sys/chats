@@ -1,0 +1,28 @@
+{
+  "status": "passed",
+  "started_at_utc": "2026-10-10T08:48:30.026512+00:00",
+  "completed_at_utc": "2026-10-10T08:49:15.228462+00:00",
+  "interface": "real administrator experiment API / supervised worker",
+  "employees": 10000,
+  "devices": 20,
+  "days": 30,
+  "punches": 600000,
+  "worker_seconds": 44.117808,
+  "wall_seconds_including_downloads": 45.202,
+  "observed_stages": [
+    "queued",
+    "seed",
+    "reports",
+    "export",
+    "ingestion",
+    "complete"
+  ],
+  "csv_download_rows_including_header": 600001,
+  "csv_download_size_bytes": 42767339,
+  "json_download_matches_result": true,
+  "main_records_unchanged": true,
+  "main_write_back_remains_false": true,
+  "temporary_db_credentials_removed": true,
+  "delete_removed_saved_artifacts": true,
+  "physical_devices_verified": false
+}
