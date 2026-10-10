@@ -20,6 +20,7 @@ import android.os.SystemClock;
 import java.io.File;
 import java.io.IOException;
 import java.util.Locale;
+import org.json.JSONObject;
 
 /** Owns the microphone for one explicitly started, app-private meeting recording. */
 public final class RecordingService extends Service {
@@ -47,6 +48,8 @@ public final class RecordingService extends Service {
     private File outputFile;
     private PowerManager.WakeLock wakeLock;
     private boolean foreground;
+    private long amplitudeWindows,amplitudeSum;
+    private int peakAmplitude;
 
     public static boolean isRecording() {
         return clock.isRecording();
@@ -74,8 +77,9 @@ public final class RecordingService extends Service {
             try {
                 // Keep the UI timer frozen and never sample a paused microphone.
                 boolean paused = isPaused();
-                sendUpdate(paused ? "paused" : "recording",
-                        paused ? 0 : recorder.getMaxAmplitude(), null, false);
+                int amplitude=paused?0:Math.max(0,Math.min(32767,recorder.getMaxAmplitude()));
+                if(!paused){amplitudeWindows++;amplitudeSum+=amplitude;peakAmplitude=Math.max(peakAmplitude,amplitude);}
+                sendUpdate(paused ? "paused" : "recording",amplitude, null, false);
                 handler.postDelayed(this, LEVEL_INTERVAL_MS);
             } catch (RuntimeException exception) {
                 failRecording("تعذر متابعة التسجيل. قد يكون الميكروفون غير متاح؛ أعد المحاولة.");
@@ -167,8 +171,9 @@ public final class RecordingService extends Service {
             recorder.prepare();
             recorder.start();
             clock.start(SystemClock.elapsedRealtime());
+            amplitudeWindows=0;amplitudeSum=0;peakAmplitude=0;
             getSharedPreferences("majlis", MODE_PRIVATE).edit()
-                    .putBoolean("recording_incomplete", true).commit();
+                    .putBoolean("recording_incomplete", true).remove("last_signal").commit();
             sendUpdate("recording", 0, null, false);
             handler.postDelayed(levels, LEVEL_INTERVAL_MS);
         } catch (SecurityException exception) {
@@ -307,6 +312,12 @@ public final class RecordingService extends Service {
             releaseWakeLock();
         }
         if (stopped) {
+            try{
+                JSONObject signal=new JSONObject();signal.put("path",selectedPath);signal.put("window_count",amplitudeWindows);
+                signal.put("peak_amplitude_percent",100.0*peakAmplitude/32767);
+                signal.put("average_window_peak_percent",amplitudeWindows==0?0:100.0*amplitudeSum/amplitudeWindows/32767);
+                getSharedPreferences("majlis",MODE_PRIVATE).edit().putString("last_signal",signal.toString()).commit();
+            }catch(Exception ignored){}
             getSharedPreferences("majlis", MODE_PRIVATE).edit()
                     .putBoolean("recording_incomplete", false)
                     .putString("last_audio", selectedPath).commit();

@@ -57,6 +57,8 @@ public class MainActivity extends Activity {
     private static volatile boolean analysisRunning;
     private static volatile boolean importRunning;
     private static final int IMPORT_AUDIO=31, EXPORT_REPORT=32;
+    private static final String[] TRANSLATION_CODES={"en","fr","de","es","tr","he","ru","el","uk","zh","fa","ur"};
+    private static final String[] TRANSLATION_NAMES={"الإنجليزية","الفرنسية","الألمانية","الإسبانية","التركية","العبرية","الروسية","اليونانية","الأوكرانية","الصينية","الفارسية","الأوردو"};
     private static final int INK = Color.rgb(19,47,54), TEAL = Color.rgb(8,127,114);
     private static final int MUTED = Color.rgb(101,117,120), PAPER = Color.rgb(244,243,238);
     private final Handler handler = new Handler(Looper.getMainLooper());
@@ -79,6 +81,7 @@ public class MainActivity extends Activity {
     private Runnable afterPermission;
     private JSONObject result;
     private String resultTab = "minutes";
+    private String translationLanguage="en";
     private MediaRecorder sampleRecorder;
     private MediaPlayer player;
     private File sampleFile;
@@ -91,6 +94,12 @@ public class MainActivity extends Activity {
             if(ANALYSIS_UPDATE.equals(intent.getAction())) {
                 busy=analysisRunning||importRunning;
                 if("meeting".equals(screen))showMeeting();
+                else if("voices".equals(screen))showVoices();
+                else if("history".equals(screen))showHistory();
+                else if("result".equals(screen)&&result!=null){
+                    if(result.has("_id")){JSONArray saved=store.meetings();for(int i=0;i<saved.length();i++){JSONObject meeting=saved.optJSONObject(i);if(meeting!=null&&meeting.optString("_id").equals(result.optString("_id")))result=meeting;}}
+                    showResult();
+                }
                 if(intent.hasExtra("error"))error(intent.getStringExtra("error"));
                 else if(intent.getBooleanExtra("saved",false))toast("تم حفظ المحضر في تبويب المحاضر.");
                 return;
@@ -129,6 +138,7 @@ public class MainActivity extends Activity {
             exportKind=state.getString("export_kind");
             if(exportKind!=null)try{File pending=new File(getCacheDir(),"pending-export.json");if(pending.isFile()&&pending.length()<=4*1024*1024)exportSnapshot=new String(java.nio.file.Files.readAllBytes(pending.toPath()),StandardCharsets.UTF_8);}catch(Exception ignored){}
             resultTab=state.getString("result_tab","minutes");
+            translationLanguage=state.getString("translation_language","en");
             try{String saved=state.getString("result");if(saved!=null)result=new JSONObject(saved);
                 else{String id=state.getString("result_id");if(id!=null){JSONArray meetings=store.meetings();for(int i=0;i<meetings.length();i++)if(id.equals(meetings.getJSONObject(i).optString("_id")))result=meetings.getJSONObject(i);}}
             }catch(Exception ignored){}
@@ -142,6 +152,7 @@ public class MainActivity extends Activity {
 
     @Override public void onSaveInstanceState(Bundle state){
         super.onSaveInstanceState(state);state.putString("screen",screen);state.putString("result_tab",resultTab);
+        state.putString("translation_language",translationLanguage);
         if(result!=null){if(result.has("_id"))state.putString("result_id",result.optString("_id"));else if(result.toString().length()<80_000)state.putString("result",result.toString());}
         state.putString("export_kind",exportKind);
     }
@@ -197,7 +208,7 @@ public class MainActivity extends Activity {
         screen="meeting"; shell("من حديث الاجتماع إلى محضر قابل للمراجعة");
         LinearLayout card = card();
         card.addView(label("اجتماع جديد",23,INK,true));
-        card.addView(label("تسجيل عربي • فصل المتحدثين • محضر وملخص",13,MUTED,false));
+        card.addView(label("كلام متعدد اللغات • فصل المتحدثين • محضر عربي",13,MUTED,false));
         titleField = edit("عنوان الاجتماع",prefs.getString("last_title","اجتماع الفريق"),false);
         titleField.setEnabled(!RecordingService.isRecording() && !busy); card.addView(titleField);
         timer=label("00:00",48,INK,true); timer.setGravity(Gravity.CENTER);
@@ -225,6 +236,13 @@ public class MainActivity extends Activity {
         analyzeButton.setEnabled(!RecordingService.isRecording() && last != null && !busy); card.addView(analyzeButton);
         if (busy) { ProgressBar progress=new ProgressBar(this); card.addView(progress); }
         card.addView(label("حتى 60 دقيقة فعلية، مع إيقاف مؤقت ومتابعة. يمكنك استيراد M4A أو MP3 أو WAV حتى 24 مليون بايت؛ يتحقق الخادم من المدة والصيغة. يبقى الصوت محليًا حتى توافق على إرساله.",12,MUTED,false));
+        if(prefs.getBoolean("test_mode",false)){
+            card.addView(label("وضع الاختبار: "+prefs.getString("test_notes",""),14,TEAL,true));
+            card.addView(label("بعد التحليل استمع وصحح النص وإسناد المتحدثين، ثم احسب أخطاء النسخة الأصلية مقارنة بمرجعك. النتائج مرتبطة بهذا الهاتف وهذه الظروف.",12,MUTED,false));
+            Button cancelTest=button("إلغاء وضع الاختبار",false,()->{prefs.edit().remove("test_mode").remove("test_notes").apply();showMeeting();});cancelTest.setEnabled(!RecordingService.isRecording()&&!busy);card.addView(cancelTest);
+        }else{
+            Button test=button("تجربة قياس موثقة",false,()->configureTest());test.setEnabled(!RecordingService.isRecording()&&!busy);card.addView(test);
+        }
         content.addView(card);
         LinearLayout info=card(); info.addView(label("لتمييز الأسماء",19,INK,true));
         JSONArray voices=store.profiles();
@@ -240,9 +258,9 @@ public class MainActivity extends Activity {
         if (!"meeting".equals(screen) || timer==null) return;
         if (RecordingService.isRecording()) {
             boolean paused=RecordingService.isPaused();
-            timer.setText(time(elapsed/1000.0)); status.setText(paused?"التسجيل متوقف مؤقتًا • الوقت ثابت":"● التسجيل جارٍ — يمكن قفل الشاشة"); status.setTextColor(TEAL);
-            pauseButton.setVisibility(View.VISIBLE);pauseButton.setText(paused?"متابعة التسجيل":"إيقاف مؤقت");
-            recordButton.setText("إنهاء التسجيل"); recordButton.setEnabled(!busy); analyzeButton.setEnabled(false);
+            setTextIfChanged(timer,time(elapsed/1000.0));setTextIfChanged(status,paused?"التسجيل متوقف مؤقتًا • الوقت ثابت":"● التسجيل جارٍ — يمكن قفل الشاشة"); status.setTextColor(TEAL);
+            pauseButton.setVisibility(View.VISIBLE);setTextIfChanged(pauseButton,paused?"متابعة التسجيل":"إيقاف مؤقت");
+            setTextIfChanged(recordButton,"إنهاء التسجيل"); recordButton.setEnabled(!busy); analyzeButton.setEnabled(false);
             consent.setEnabled(false); titleField.setEnabled(false); level.setProgress(paused?0:amplitude);
         }
     }
@@ -333,8 +351,8 @@ public class MainActivity extends Activity {
                 try(OutputStream out=getContentResolver().openOutputStream(uri,"wt")){
                     if(out==null)throw new Exception("تعذر فتح ملف التصدير.");
                     JSONObject meeting=new JSONObject(snapshot);
-                    if("PDF".equals(kind))MeetingPdf.write(getApplicationContext(),store.report(meeting),out);
-                    else{String text="JSON".equals(kind)?publicMeeting(meeting).toString(2):store.report(meeting);out.write(text.getBytes(StandardCharsets.UTF_8));}
+                    if("PDF".equals(kind))MeetingPdf.write(getApplicationContext(),exportText(meeting),out);
+                    else{String text="JSON".equals(kind)?publicMeeting(meeting).toString(2):exportText(meeting);out.write(text.getBytes(StandardCharsets.UTF_8));}
                     handler.post(()->toast("تم تصدير المحضر."));
                 }catch(Exception ex){handler.post(()->error("تعذر تصدير المحضر: "+ex.getMessage()));}
             });
@@ -364,6 +382,9 @@ public class MainActivity extends Activity {
         JSONObject exported=new JSONObject();
         for(String key:new String[]{"title","language","duration_seconds","speakers","segments","minutes"})exported.put(key,meeting.get(key));
         exported.put("minutes_need_review",meeting.optBoolean("_minutes_stale"));
+        if(meeting.has("_evaluation")){exported.put("evaluation",meeting.getJSONObject("_evaluation"));if(meeting.has("_baseline_segments"))exported.put("baseline_segments",meeting.getJSONArray("_baseline_segments"));}
+        if(meeting.has("_speech_flags"))exported.put("speech_flags_reviewed_by_user",meeting.getJSONObject("_speech_flags"));
+        if(meeting.has("_translations")){exported.put("translations",meeting.getJSONObject("_translations"));exported.put("translations_need_review",meeting.optBoolean("_translations_stale"));}
         exported.put("demo",meeting.optBoolean("_demo"));return exported;
     }
 
@@ -390,6 +411,7 @@ public class MainActivity extends Activity {
         }
         final JSONArray profiles=store.profiles();
         final String title=titleField.getText().toString().trim();
+        final String testNotes=prefs.getBoolean("test_mode",false)?prefs.getString("test_notes",""):null;
         new AlertDialog.Builder(this).setTitle("إرسال الاجتماع للتحليل؟")
             .setMessage("سيُرسل تسجيل الاجتماع و"+profiles.length()+" عينات صوت مسماة إلى:\n"+url+"\nوسيستخدم الخادم خدمة OpenAI لتفريغ الكلام وتمييز المتحدثين وإعداد الملخص. قد تُحتسب تكلفة على حساب صاحب الخادم. يبقى المحضر قابلًا للمراجعة.")
             .setNegativeButton("إلغاء",null).setPositiveButton("موافق، أرسل للتحليل",(d,w)->{
@@ -397,8 +419,15 @@ public class MainActivity extends Activity {
                 analysisRunning=true;busy=true;prefs.edit().putString("last_title",title).apply();showMeeting();
                 worker.execute(()->{
                     try {
+                        long started=android.os.SystemClock.elapsedRealtime();
                         JSONObject analyzed=MeetingApi.analyze(url,token,audio,title,profiles);
                         analyzed.put("_audio_path",audio.getAbsolutePath()); analyzed.put("_demo",false);
+                        analyzed.put("_baseline_segments",new JSONArray(analyzed.getJSONArray("segments").toString()));
+                        analyzed.put("_analysis_seconds",(android.os.SystemClock.elapsedRealtime()-started)/1000.0);
+                        analyzed.put("_audio_bytes",audio.length());analyzed.put("_device",Build.MANUFACTURER+" "+Build.MODEL);
+                        analyzed.put("_capture_kind",audio.getName().startsWith("import_")?"ملف مستورد":"ميكروفون الهاتف");
+                        try{JSONObject signal=new JSONObject(prefs.getString("last_signal","{}"));if(audio.getAbsolutePath().equals(signal.optString("path"))){signal.remove("path");analyzed.put("_signal",signal);}}catch(Exception ignored){}
+                        if(testNotes!=null)analyzed.put("_test_notes",testNotes);
                         store.saveMeeting(analyzed);
                         handler.post(()->{
                             analysisRunning=false;busy=false;
@@ -415,6 +444,7 @@ public class MainActivity extends Activity {
     }
 
     private void showVoices() {
+        busy=analysisRunning||importRunning;
         screen="voices";shell("عينات صوت مسماة لتحسين التعرف على المشاركين");
         LinearLayout intro=card();intro.addView(label("أسماء يعرفها اجتماعك",23,INK,true));
         intro.addView(label("سجّل 5 ثوانٍ بصوت كل مشارك، بموافقته، في مكان هادئ. تُحفظ العينة على الجهاز وتُرسل فقط عند موافقتك على تحليل اجتماع. هذه عينات مرجعية، وليست إثباتًا لهوية الشخص.",14,MUTED,false));
@@ -430,7 +460,7 @@ public class MainActivity extends Activity {
     }
 
     private void addVoice() {
-        if(RecordingService.isRecording()||busy||store.profiles().length()>=4)return;
+        if(RecordingService.isRecording()||analysisRunning||importRunning||store.profiles().length()>=4)return;
         EditText name=edit("اسم المشارك","",false);
         new AlertDialog.Builder(this).setTitle("عينة بموافقة صاحب الصوت")
             .setMessage("أدخل اسمه، ثم دعه يتحدث وحده لمدة 5 ثوانٍ. مثال: أنا أحمد وأشارك في اجتماع الفريق اليوم.")
@@ -472,8 +502,10 @@ public class MainActivity extends Activity {
     }
 
     private void deleteVoice(JSONObject profile) {
+        if(analysisRunning||importRunning){toast("انتظر انتهاء المعالجة قبل حذف العينة.");return;}
         new AlertDialog.Builder(this).setTitle("حذف عينة "+profile.optString("name")+"؟")
             .setMessage("سيُحذف تسجيل العينة من هذا الجهاز.").setNegativeButton("إلغاء",null).setPositiveButton("حذف",(d,w)->{
+                if(analysisRunning||importRunning){toast("انتظر انتهاء المعالجة قبل حذف العينة.");return;}
                 try{JSONArray old=store.profiles(),next=new JSONArray();for(int i=0;i<old.length();i++){JSONObject p=old.optJSONObject(i);if(!p.optString("id").equals(profile.optString("id")))next.put(p);}
                     store.saveProfiles(next);File f=new File(profile.optString("path"));if(f.getCanonicalFile().getParentFile().equals(store.recordingsDir().getCanonicalFile()))f.delete();stopPlayer();showVoices();
                 }catch(Exception ex){error("تعذر حذف العينة.");}
@@ -501,7 +533,7 @@ public class MainActivity extends Activity {
         card.addView(label("التسجيل وعينات الصوت والمحاضر محفوظة في مساحة التطبيق الخاصة. حذف بيانات التطبيق أو إزالته يمسحها. النسخ الاحتياطي التلقائي معطّل.",13,MUTED,false));
         card.addView(label("للمطور: يسمح النموذج بـ HTTP على 10.0.2.2 أو localhost فقط. على هاتف حقيقي استخدم خادمًا يدعم HTTPS.",12,MUTED,false));
         content.addView(card);
-        LinearLayout about=card();about.addView(label("مجلس · نموذج أولي 0.2",18,INK,true));
+        LinearLayout about=card();about.addView(label("مجلس · نموذج أولي 0.3",18,INK,true));
         about.addView(label("فصل المتحدثين ليس إثباتًا للهوية. راجع الأسماء والنص والقرارات قبل اعتماد المحضر. التعرف السحابي يحتاج خادمًا ومفتاح خدمة صالحين.",14,MUTED,false));content.addView(about);
     }
 
@@ -536,14 +568,21 @@ public class MainActivity extends Activity {
         head.addView(label(time(result.optDouble("duration_seconds"))+" • "+result.optJSONArray("speakers").length()+" متحدثين"+(result.optBoolean("_demo")?" • محتوى تجريبي":""),13,MUTED,false));
         head.addView(label("اضغط على اسم متحدث لتصحيحه. راجع المحضر قبل مشاركته.",13,MUTED,false));
         if(result.optBoolean("_minutes_stale"))head.addView(label("النص تغيّر؛ المحضر يحتاج إعادة تلخيص ومراجعة.",15,Color.rgb(161,94,12),true));
+        JSONObject measured=result.optJSONObject("_evaluation");
+        if(measured!=null)head.addView(label("اختبار بمرجع راجعته أنت · راجع نتائج الكلمات والأحرف وحدود القياس أدناه",13,TEAL,true));
         File audio=resultAudio();if(audio!=null)addPlayback(head,audio);
         JSONArray speakers=result.optJSONArray("speakers");
         for(int i=0;i<speakers.length();i++){JSONObject speaker=speakers.optJSONObject(i);head.addView(button(speaker.optString("name")+(speaker.optBoolean("matched_reference")?" · عينة مسماة":" · تسمية قابلة للتعديل"),false,()->renameSpeaker(speaker)));}
         LinearLayout tabs=new LinearLayout(this);Button minutes=button("المحضر والملخص",resultTab.equals("minutes"),()->{resultTab="minutes";showResult();});Button transcript=button("النص الكامل",resultTab.equals("transcript"),()->{resultTab="transcript";showResult();});
         tabs.addView(minutes,new LinearLayout.LayoutParams(0,-2,1));tabs.addView(transcript,new LinearLayout.LayoutParams(0,-2,1));head.addView(tabs);content.addView(head);
-        if("minutes".equals(resultTab))renderMinutes();else renderTranscript();
+        if("translation".equals(resultTab))renderTranslation();else if("minutes".equals(resultTab))renderMinutes();else renderTranscript();
+        content.addView(button("ترجمة اللقاء",false,()->chooseTranslation()));
+        if(result.has("_baseline_segments")&&!result.optBoolean("_demo")){
+            Button evaluate=button("قياس الدقة بعد المراجعة",false,()->evaluateMeeting());evaluate.setEnabled(!analysisRunning&&!importRunning);content.addView(evaluate);
+        }
+        if(measured!=null)renderEvaluation(measured);
         content.addView(button("تصدير المحضر",false,()->exportReport()));
-        content.addView(button("مشاركة المحضر كنص",true,()->{Intent share=new Intent(Intent.ACTION_SEND);share.setType("text/plain");share.putExtra(Intent.EXTRA_SUBJECT,result.optString("title"));share.putExtra(Intent.EXTRA_TEXT,store.report(result));startActivity(Intent.createChooser(share,"مشاركة المحضر"));}));
+        content.addView(button("مشاركة المحضر كنص",true,()->{Intent share=new Intent(Intent.ACTION_SEND);share.setType("text/plain");share.putExtra(Intent.EXTRA_SUBJECT,result.optString("title"));share.putExtra(Intent.EXTRA_TEXT,exportText(result));startActivity(Intent.createChooser(share,"مشاركة المحضر"));}));
         if(result.optBoolean("_demo")&&!result.has("_id"))content.addView(button("حفظ المثال التجريبي",false,()->{try{store.saveMeeting(result);toast("تم حفظ المثال في المحاضر.");showResult();}catch(Exception ex){error(ex.getMessage());}}));
     }
 
@@ -599,6 +638,8 @@ public class MainActivity extends Activity {
             count++;LinearLayout row=card();row.addView(label(speakerName(seg.optString("speaker_id"))+" · "+time(seg.optDouble("start"))+" – "+time(seg.optDouble("end")),13,TEAL,true));row.addView(label(seg.optString("text"),16,INK,false));
             File audio=resultAudio();if(audio!=null)row.addView(button("استماع من "+time(seg.optDouble("start")),false,()->playAt(audio,seg.optDouble("start"))));
             Button edit=button("تعديل النص والمتحدث",false,()->editSegment(seg));edit.setEnabled(!analysisRunning);row.addView(edit);rows.addView(row);
+            String annotation=speechNote(result,seg.optString("id"));if(!annotation.isEmpty())row.addView(label(annotation,13,MUTED,false));
+            Button language=button("تحديد اللغة ووضوح الكلام",false,()->editSpeechFlag(seg));language.setEnabled(!analysisRunning);row.addView(language);
         }
         if(count==0)rows.addView(label(segments.length()==0?"لم يظهر كلام واضح في التسجيل.":"لا توجد مقاطع تطابق البحث.",15,MUTED,false));
     }
@@ -612,7 +653,7 @@ public class MainActivity extends Activity {
         Spinner speaker=new Spinner(this);speaker.setAdapter(new ArrayAdapter<String>(this,android.R.layout.simple_spinner_dropdown_item,names));speaker.setSelection(selected);fields.addView(speaker);
         AlertDialog dialog=new AlertDialog.Builder(this).setTitle("تصحيح المقطع").setView(fields).setNegativeButton("إلغاء",null).setPositiveButton("حفظ التعديل",null).create();
         dialog.setOnShowListener(d->dialog.getButton(AlertDialog.BUTTON_POSITIVE).setOnClickListener(v->{
-            try{JSONObject changed=MeetingEdits.applySegmentEdit(result,segment.optString("id"),text.getText().toString(),people.getJSONObject(speaker.getSelectedItemPosition()).getString("id"));commitEdit(changed,true);dialog.dismiss();}
+            try{JSONObject changed=MeetingEdits.applySegmentEdit(result,segment.optString("id"),text.getText().toString(),people.getJSONObject(speaker.getSelectedItemPosition()).getString("id"));invalidateTranslations(changed);changed.remove("_evaluation");JSONObject flags=changed.optJSONObject("_speech_flags");if(flags!=null)flags.remove(segment.optString("id"));commitEdit(changed,true);dialog.dismiss();}
             catch(Exception ex){text.setError(ex.getMessage());}
         }));dialog.show();
     }
@@ -627,7 +668,7 @@ public class MainActivity extends Activity {
         EditText text=edit("الملخص",result.optJSONObject("minutes").optString("summary"),false);text.setInputType(InputType.TYPE_CLASS_TEXT|InputType.TYPE_TEXT_FLAG_MULTI_LINE);text.setSingleLine(false);text.setMinLines(4);
         AlertDialog dialog=new AlertDialog.Builder(this).setTitle("تعديل الملخص").setView(text).setNegativeButton("إلغاء",null).setPositiveButton("حفظ التعديل",null).create();
         dialog.setOnShowListener(d->dialog.getButton(AlertDialog.BUTTON_POSITIVE).setOnClickListener(v->{
-            try{String summary=text.getText().toString().trim();if(summary.isEmpty()||summary.length()>20000)throw new Exception("أدخل ملخصًا بين حرف و20 ألف حرف.");JSONObject changed=new JSONObject(result.toString());changed.getJSONObject("minutes").put("summary",summary);changed.put("_summary_edited",true);commitEdit(changed,true);dialog.dismiss();}
+            try{String summary=text.getText().toString().trim();if(summary.isEmpty()||summary.length()>12000)throw new Exception("أدخل ملخصًا بين حرف و12 ألف حرف.");JSONObject changed=new JSONObject(result.toString());changed.getJSONObject("minutes").put("summary",summary);changed.put("_summary_edited",true);invalidateTranslations(changed);commitEdit(changed,true);dialog.dismiss();}
             catch(Exception ex){text.setError(ex.getMessage());}
         }));dialog.show();
     }
@@ -643,7 +684,8 @@ public class MainActivity extends Activity {
                 try{final JSONObject input=new JSONObject(result.toString());analysisRunning=true;showResult();
                     worker.execute(()->{try{
                         JSONObject updated=MeetingApi.summarize(url,token,input);
-                        for(String key:new String[]{"_id","_saved_at","_audio_path","_demo"})if(input.has(key))updated.put(key,input.get(key));
+                        for(String key:new String[]{"_id","_saved_at","_audio_path","_demo","_baseline_segments","_analysis_seconds","_audio_bytes","_device","_capture_kind","_signal","_test_notes","_evaluation","_translations","_speech_flags"})if(input.has(key))updated.put(key,input.get(key));
+                        invalidateTranslations(updated);
                         updated.put("_minutes_stale",false);updated.put("_summary_edited",false);store.saveMeeting(updated);
                         handler.post(()->{analysisRunning=false;busy=importRunning;getApplicationContext().sendBroadcast(new Intent(ANALYSIS_UPDATE).setPackage(getPackageName()).putExtra("saved",true));if(!isDestroyed()&&!isFinishing()){result=updated;resultTab="minutes";showResult();}});
                     }catch(Exception ex){handler.post(()->{analysisRunning=false;busy=importRunning;getApplicationContext().sendBroadcast(new Intent(ANALYSIS_UPDATE).setPackage(getPackageName()).putExtra("error",ex.getMessage()));if(!isDestroyed()&&!isFinishing()&&"result".equals(screen))showResult();});}});
@@ -652,8 +694,159 @@ public class MainActivity extends Activity {
     }
 
     private interface TextChange{void changed(String text);}
+    private void setTextIfChanged(TextView view,String text){if(!view.getText().toString().equals(text))view.setText(text);}
     private TextWatcher watcher(TextChange change){return new TextWatcher(){public void beforeTextChanged(CharSequence s,int start,int count,int after){}public void onTextChanged(CharSequence s,int start,int before,int count){change.changed(s.toString());}public void afterTextChanged(Editable e){}};}
-    private String speakerName(String id){JSONArray speakers=result.optJSONArray("speakers");for(int i=0;i<speakers.length();i++){JSONObject s=speakers.optJSONObject(i);if(id.equals(s.optString("id")))return s.optString("name");}return "متحدث";}
+
+    private void chooseTranslation(){
+        new AlertDialog.Builder(this).setTitle("لغة الترجمة").setItems(TRANSLATION_NAMES,(d,index)->{
+            translationLanguage=TRANSLATION_CODES[index];resultTab="translation";showResult();
+        }).show();
+    }
+
+    private void renderTranslation(){
+        LinearLayout intro=card();intro.addView(label("ترجمة اللقاء · "+translationLanguage,22,INK,true));
+        intro.addView(label("ترجمة آلية للنص والمحضر، مع إبقاء أسماء المتحدثين وأوقات المقاطع. راجع المصطلحات والمعنى قبل المشاركة.",14,MUTED,false));
+        JSONObject all=result.optJSONObject("_translations"),translated=all==null?null:all.optJSONObject(translationLanguage);
+        if(translated!=null&&translated.optBoolean("_stale",false))intro.addView(label("تغيّر المصدر بعد الترجمة؛ حدّثها قبل اعتمادها.",14,Color.rgb(161,94,12),true));
+        Button translate=button(analysisRunning?"جارٍ المعالجة…":translated==null?"إنشاء الترجمة":"تحديث الترجمة",true,()->requestTranslation());
+        translate.setEnabled(!analysisRunning&&!importRunning&&!RecordingService.isRecording());intro.addView(translate);
+        intro.addView(button("اختيار لغة أخرى",false,()->chooseTranslation()));content.addView(intro);
+        if(translated==null){section("النص المترجم","اختر إنشاء الترجمة، ثم راجع تأكيد إرسال النص إلى الخدمة.");return;}
+        section("المحضر المترجم",translated.optString("translated_report"));
+        JSONArray texts=translated.optJSONArray("segments"),source=result.optJSONArray("segments");
+        if(texts!=null)for(int i=0;i<texts.length();i++){
+            JSONObject line=texts.optJSONObject(i),original=source.optJSONObject(i);if(line==null||original==null)continue;
+            LinearLayout row=card();row.addView(label(speakerName(original.optString("speaker_id"))+" · "+time(original.optDouble("start")),13,TEAL,true));row.addView(label(line.optString("text"),16,INK,false));content.addView(row);
+        }
+    }
+
+    private void requestTranslation(){
+        if(analysisRunning||importRunning||RecordingService.isRecording())return;
+        final String url=prefs.getString("server_url",""),token=prefs.getString("access_token","");
+        if(url.isEmpty()||token.isEmpty()){error("اضبط رابط الخدمة ورمز الوصول في الإعدادات أولًا.");return;}
+        final String target=translationLanguage;
+        new AlertDialog.Builder(this).setTitle("إرسال النص للترجمة؟")
+            .setMessage("سيُرسل النص والمحضر وأسماء المتحدثين إلى "+url+" ثم خدمة OpenAI للترجمة إلى "+target+". لا يُرسل الصوت في هذه العملية. قد تُحتسب تكلفة، وتحتاج الترجمة مراجعة."+(result.optBoolean("_minutes_stale")?"\nالمحضر الحالي يحتاج إعادة تلخيص بعد تصحيح النص؛ الترجمة ستستخدم نسخته الحالية.":""))
+            .setNegativeButton("إلغاء",null).setPositiveButton("موافق، ترجم النص",(d,w)->{
+                if(analysisRunning)return;
+                try{final JSONObject input=new JSONObject(result.toString());analysisRunning=true;showResult();
+                    worker.execute(()->{try{
+                        JSONObject translated=MeetingApi.translate(url,token,input,target);translated.put("_stale",false);
+                        JSONObject next=new JSONObject(input.toString()),all=next.optJSONObject("_translations");if(all==null)all=new JSONObject();
+                        all.put(target,translated);next.put("_translations",all);boolean stale=false;java.util.Iterator<String> keys=all.keys();while(keys.hasNext())if(all.getJSONObject(keys.next()).optBoolean("_stale"))stale=true;next.put("_translations_stale",stale);
+                        store.saveMeeting(next);
+                        handler.post(()->{analysisRunning=false;busy=importRunning;getApplicationContext().sendBroadcast(new Intent(ANALYSIS_UPDATE).setPackage(getPackageName()).putExtra("saved",true));if(!isDestroyed()&&!isFinishing()){result=next;translationLanguage=target;resultTab="translation";showResult();}});
+                    }catch(Exception ex){handler.post(()->{analysisRunning=false;busy=importRunning;getApplicationContext().sendBroadcast(new Intent(ANALYSIS_UPDATE).setPackage(getPackageName()).putExtra("error",ex.getMessage()));if(!isDestroyed()&&!isFinishing()&&"result".equals(screen))showResult();});}});
+                }catch(Exception ex){analysisRunning=false;error(ex.getMessage());}
+            }).show();
+    }
+
+    private void invalidateTranslations(JSONObject meeting)throws Exception{
+        meeting.put("_translations_stale",true);JSONObject all=meeting.optJSONObject("_translations");
+        if(all!=null){java.util.Iterator<String> keys=all.keys();while(keys.hasNext())all.getJSONObject(keys.next()).put("_stale",true);}
+    }
+
+    private String languageName(String code){
+        if("ar".equals(code))return "العربية";if("mul".equals(code))return "متعدد اللغات";if("other".equals(code))return "لغة أخرى";if("unknown".equals(code))return "لغة غير محددة";
+        for(int i=0;i<TRANSLATION_CODES.length;i++)if(TRANSLATION_CODES[i].equals(code))return TRANSLATION_NAMES[i];return "لغة غير محددة";
+    }
+
+    private String speechStatusName(String status){
+        if("clear".equals(status))return "مفهوم";if("unclear".equals(status))return "غير واضح";
+        if("coded_by_user".equals(status))return "مرمز/مشفر بحسب توثيق المستخدم";
+        return "غير قابل للفهم؛ التشفير غير متحقق";
+    }
+
+    private JSONObject speechFlag(JSONObject meeting,String id){
+        JSONObject flags=meeting.optJSONObject("_speech_flags");if(flags!=null&&flags.optJSONObject(id)!=null)return flags.optJSONObject(id);
+        JSONObject minutes=meeting.optJSONObject("minutes");JSONArray annotations=minutes==null?null:minutes.optJSONArray("speech_annotations");
+        if(annotations!=null)for(int i=0;i<annotations.length();i++){JSONObject annotation=annotations.optJSONObject(i);if(annotation!=null&&id.equals(annotation.optString("segment_id")))return annotation;}
+        return null;
+    }
+
+    private String speechNote(JSONObject meeting,String id){
+        JSONObject flag=speechFlag(meeting,id);if(flag==null)return "";
+        return languageName(flag.optString("language","unknown"))+" · "+speechStatusName(flag.optString("status","uninterpretable"))+"\n"+flag.optString("reason")+
+            (flag.optBoolean("reviewed_by_user")?" · تسمية راجعها المستخدم":meeting.optBoolean("_minutes_stale")?" · تقدير آلي قديم بعد تصحيح النص":" · تقدير آلي يحتاج مراجعة");
+    }
+
+    private void editSpeechFlag(JSONObject segment){
+        if(analysisRunning)return;String id=segment.optString("id");JSONObject previous=speechFlag(result,id);
+        String[] codes=new String[TRANSLATION_CODES.length+4],names=new String[codes.length];codes[0]="ar";names[0]="العربية";
+        for(int i=0;i<TRANSLATION_CODES.length;i++){codes[i+1]=TRANSLATION_CODES[i];names[i+1]=TRANSLATION_NAMES[i];}
+        codes[codes.length-3]="mul";names[names.length-3]="متعدد اللغات";codes[codes.length-2]="other";names[names.length-2]="لغة أخرى";codes[codes.length-1]="unknown";names[names.length-1]="لغة غير محددة";
+        String[] statuses={"clear","unclear","uninterpretable","coded_by_user"};
+        LinearLayout fields=new LinearLayout(this);fields.setOrientation(LinearLayout.VERTICAL);fields.setPadding(dp(18),0,dp(18),0);
+        fields.addView(label("يرتبط التنبيه بهذا المتحدث ووقت المقطع. اختر لغة غير محددة إذا لم تتأكد. تسمية مشفر تحتاج توثيقك؛ التطبيق لا يؤكد التشفير أو يفكه تلقائيًا.",13,MUTED,false));
+        Spinner language=new Spinner(this);language.setAdapter(new ArrayAdapter<String>(this,android.R.layout.simple_spinner_dropdown_item,names));int selection=codes.length-1;
+        for(int i=0;i<codes.length;i++)if(previous!=null&&codes[i].equals(previous.optString("language")))selection=i;language.setSelection(selection);fields.addView(language);
+        Spinner clarity=new Spinner(this);clarity.setAdapter(new ArrayAdapter<String>(this,android.R.layout.simple_spinner_dropdown_item,new String[]{"مفهوم","غير واضح","غير قابل للفهم","مرمز/مشفر بتوثيقي"}));
+        for(int i=0;i<statuses.length;i++)if(previous!=null&&statuses[i].equals(previous.optString("status")))clarity.setSelection(i);fields.addView(clarity);
+        EditText reason=edit("سبب التسمية أو مرجع التوثيق",previous==null?"":previous.optString("reason"),false);reason.setSingleLine(false);fields.addView(reason);
+        AlertDialog dialog=new AlertDialog.Builder(this).setTitle("لغة المقطع ووضوحه").setView(fields).setNegativeButton("إلغاء",null).setPositiveButton("حفظ التسمية",null).create();
+        dialog.setOnShowListener(d->dialog.getButton(AlertDialog.BUTTON_POSITIVE).setOnClickListener(v->{
+            String note=reason.getText().toString().trim();if(note.isEmpty()||note.length()>300){reason.setError("اكتب سببًا أو توثيقًا حتى 300 حرف.");return;}
+            try{JSONObject next=new JSONObject(result.toString()),flags=next.optJSONObject("_speech_flags");if(flags==null)flags=new JSONObject();
+                JSONObject flag=new JSONObject();flag.put("segment_id",id);flag.put("language",codes[language.getSelectedItemPosition()]);flag.put("status",statuses[clarity.getSelectedItemPosition()]);flag.put("reason",note);flag.put("reviewed_by_user",true);
+                flags.put(id,flag);next.put("_speech_flags",flags);commitEdit(next,true);dialog.dismiss();
+            }catch(Exception ex){error(ex.getMessage());}
+        }));dialog.show();
+    }
+
+    private void configureTest(){
+        EditText notes=edit("المسافة، الضجيج، المشاركون والميكروفون",prefs.getString("test_notes",""),false);notes.setSingleLine(false);notes.setMinLines(3);
+        AlertDialog dialog=new AlertDialog.Builder(this).setTitle("تجربة قياس موثقة").setMessage("جرّب الاجتماع نفسه في ظروف واضحة: مثل متر واحد أو ثلاثة أمتار، غرفة هادئة أو ضجيج. أدخل الظروف الفعلية وأعلم المشاركين. لا يستنتج التطبيق المسافة أو اسم شخص مجهول من الصوت.")
+            .setView(notes).setNegativeButton("رجوع",null).setPositiveButton("تفعيل الاختبار",null).create();
+        dialog.setOnShowListener(d->dialog.getButton(AlertDialog.BUTTON_POSITIVE).setOnClickListener(v->{String value=notes.getText().toString().trim();if(value.isEmpty()||value.length()>1000){notes.setError("اكتب وصفًا للظروف من حرف إلى ألف حرف.");return;}prefs.edit().putBoolean("test_mode",true).putString("test_notes",value).apply();dialog.dismiss();showMeeting();}));dialog.show();
+    }
+
+    private void evaluateMeeting(){
+        if(analysisRunning||importRunning)return;
+        if(result.optBoolean("_demo")||!result.has("_baseline_segments")){error("يتطلب القياس تسجيلًا حقيقيًا حُلّل بهذه النسخة.");return;}
+        LinearLayout fields=new LinearLayout(this);fields.setOrientation(LinearLayout.VERTICAL);fields.setPadding(dp(18),0,dp(18),0);
+        fields.addView(label("استمع للتسجيل من تبويب النص، وصحح جميع الكلمات ونسبة كل مقطع إلى المتحدث. الحساب يقارن التفريغ الأصلي بمرجعك المصحح. لا يقيس الترجمة أو جودة القرارات، ولا يمثل تقييمًا مستقلاً دون صحة هذا المرجع.",14,MUTED,false));
+        EditText notes=edit("ظروف التجربة",result.optString("_test_notes",""),false);notes.setSingleLine(false);fields.addView(notes);
+        CheckBox verified=new CheckBox(this);verified.setText("استمعت وصححت جميع المقاطع والمتحدثين كمرجع للاختبار");fields.addView(verified);
+        AlertDialog dialog=new AlertDialog.Builder(this).setTitle("قياس الدقة بعد المراجعة").setView(fields).setNegativeButton("إلغاء",null).setPositiveButton("احسب محليًا",null).create();
+        dialog.setOnShowListener(d->dialog.getButton(AlertDialog.BUTTON_POSITIVE).setOnClickListener(v->{
+            if(!verified.isChecked()){toast("أكمل الاستماع والمراجعة أولًا.");return;}String conditions=notes.getText().toString().trim();if(conditions.isEmpty()||conditions.length()>1000){notes.setError("صف ظروف التجربة حتى ألف حرف.");return;}
+            try{final JSONObject input=new JSONObject(result.toString());input.put("_test_notes",conditions);analysisRunning=true;dialog.dismiss();showResult();
+                worker.execute(()->{try{
+                    JSONObject score=MeetingEvaluation.compare(input.getJSONArray("_baseline_segments"),input.getJSONArray("segments"));
+                    score.put("human_reviewed",true);score.put("conditions",conditions);score.put("device",input.optString("_device"));score.put("capture",input.optString("_capture_kind"));score.put("analysis_seconds",input.optDouble("_analysis_seconds"));score.put("audio_bytes",input.optLong("_audio_bytes"));score.put("measured_at",System.currentTimeMillis());
+                    if(input.has("_signal"))score.put("signal",input.getJSONObject("_signal"));
+                    input.put("_evaluation",score);store.saveMeeting(input);
+                    handler.post(()->{analysisRunning=false;busy=importRunning;getApplicationContext().sendBroadcast(new Intent(ANALYSIS_UPDATE).setPackage(getPackageName()));if(!isDestroyed()&&!isFinishing()){result=input;showResult();toast("تم حفظ القياس المحلي مع مرجعك المصحح.");}});
+                }catch(Exception ex){handler.post(()->{analysisRunning=false;busy=importRunning;getApplicationContext().sendBroadcast(new Intent(ANALYSIS_UPDATE).setPackage(getPackageName()).putExtra("error",ex.getMessage()));if(!isDestroyed()&&!isFinishing()&&"result".equals(screen))showResult();});}});
+            }catch(Exception ex){analysisRunning=false;error(ex.getMessage());}
+        }));dialog.show();
+    }
+
+    private String evaluationText(JSONObject score){
+        JSONObject signal=score.optJSONObject("signal");
+        return "الهاتف: "+score.optString("device")+"\nمصدر الصوت: "+score.optString("capture")+"\nالظروف: "+score.optString("conditions")+
+            (signal==null?"":"\nذروة إشارة الميكروفون: "+String.format(Locale.US,"%.1f",signal.optDouble("peak_amplitude_percent"))+"% من مجال الجهاز؛ ليست قياس ديسيبل أو دليلًا على وضوح الكلام")+
+            "\nزمن التحليل: "+String.format(Locale.US,"%.1f",score.optDouble("analysis_seconds"))+" ثانية"+
+            "\nأخطاء الكلمات: "+score.optInt("word_errors")+" من "+score.optInt("reference_words")+" كلمة مرجعية"+
+            "\nمعدل خطأ الكلمات WER: "+String.format(Locale.US,"%.1f",score.optDouble("word_error_rate_percent"))+"% (الأقل أفضل؛ يمكن أن يتجاوز 100% بسبب الكلمات المضافة)"+
+            (score.has("character_error_rate_percent")&&!score.isNull("character_error_rate_percent")?"\nمعدل خطأ الأحرف CER: "+String.format(Locale.US,"%.1f",score.optDouble("character_error_rate_percent"))+"%":"\nCER غير محسوب؛ الحد 6000 حرف مطبّع في كل نسخة.")+
+            (score.optBoolean("has_cjk")?"\nللنص الصيني استخدم CER؛ WER القائم على فصل الكلمات غير مناسب للنص دون مسافات.":"")+
+            "\nنسبة زمن المقاطع التي صححت إسنادها إلى المتحدث: "+String.format(Locale.US,"%.1f",score.optDouble("speaker_correction_percent"))+"%"+
+            "\nعدد المقاطع المعدّلة: "+score.optInt("changed_segments")+
+            "\nمرجع الحساب هو النص والإسناد اللذان راجعتهما أنت. قياس إسناد المتحدثين يعتمد حدود المقاطع الحالية، وليس DER معياريًا، ولا يثبت التقاط الكلام الذي غاب كليًا عن التسجيل أو دقة المحضر والترجمة.";
+    }
+
+    private void renderEvaluation(JSONObject score){section("نتيجة تجربة موثقة",evaluationText(score));}
+
+    private String exportText(JSONObject meeting){
+        StringBuilder text=new StringBuilder(store.report(meeting));JSONObject score=meeting.optJSONObject("_evaluation");if(score!=null)text.append("\nنتيجة تجربة موثقة\n").append(evaluationText(score)).append("\n");
+        JSONArray segments=meeting.optJSONArray("segments");
+        if(segments!=null)for(int i=0;i<segments.length();i++){JSONObject segment=segments.optJSONObject(i);if(segment==null)continue;JSONObject flag=speechFlag(meeting,segment.optString("id"));if(flag!=null&&(!"ar".equals(flag.optString("language"))||!"clear".equals(flag.optString("status"))))text.append("\nلغة ووضوح المقطع ").append(segment.optString("id")).append(" · ").append(speakerName(meeting,segment.optString("speaker_id"))).append(" · ").append(time(segment.optDouble("start"))).append("\n").append(speechNote(meeting,segment.optString("id"))).append("\n");}
+        JSONObject all=meeting.optJSONObject("_translations");if(all!=null){java.util.Iterator<String> keys=all.keys();while(keys.hasNext()){String code=keys.next();JSONObject translated=all.optJSONObject(code);if(translated!=null)text.append("\nالترجمة: ").append(code).append(translated.optBoolean("_stale")?" · المصدر تغيّر بعد الترجمة":"").append("\n").append(translated.optString("translated_report")).append("\n");}}
+        return text.toString();
+    }
+    private String speakerName(String id){return speakerName(result,id);}
+    private String speakerName(JSONObject meeting,String id){JSONArray speakers=meeting.optJSONArray("speakers");for(int i=0;i<speakers.length();i++){JSONObject s=speakers.optJSONObject(i);if(id.equals(s.optString("id")))return s.optString("name");}return "متحدث";}
     private void renameSpeaker(JSONObject speaker){
         if(analysisRunning){toast("انتظر انتهاء التحليل قبل التعديل.");return;}
         EditText input=edit("اسم المتحدث",speaker.optString("name"),false);
@@ -668,6 +861,7 @@ public class MainActivity extends Activity {
                     for(int i=0;i<people.length();i++)if(id.equals(people.getJSONObject(i).getString("id")))people.getJSONObject(i).put("name",n);
                     JSONArray tasks=updated.getJSONObject("minutes").getJSONArray("action_items");
                     for(int i=0;i<tasks.length();i++){JSONObject task=tasks.getJSONObject(i);if(oldName.equals(task.optString("owner")))task.put("owner",n);}
+                    invalidateTranslations(updated);
                     commitEdit(updated,true);
                 }catch(Exception ex){error("تعذر حفظ الاسم.");}
             }).show();
@@ -729,7 +923,7 @@ public class MainActivity extends Activity {
     private void section(String title,String text){LinearLayout card=card();card.addView(label(title,20,INK,true));card.addView(label(text,16,INK,false));content.addView(card);}
     private void listSection(String title,JSONArray items,String empty){LinearLayout card=card();card.addView(label(title,20,INK,true));if(items==null||items.length()==0)card.addView(label(empty,14,MUTED,false));else for(int i=0;i<items.length();i++)card.addView(label("• "+items.optString(i),15,INK,false));content.addView(card);}
     private LinearLayout card(){LinearLayout l=new LinearLayout(this);l.setOrientation(LinearLayout.VERTICAL);l.setPadding(dp(18),dp(18),dp(18),dp(18));GradientDrawable bg=new GradientDrawable();bg.setColor(Color.WHITE);bg.setCornerRadius(dp(18));l.setBackground(bg);LinearLayout.LayoutParams p=new LinearLayout.LayoutParams(-1,-2);p.setMargins(0,0,0,dp(14));l.setLayoutParams(p);return l;}
-    private TextView label(String text,int size,int color,boolean bold){TextView v=new TextView(this);v.setText(text);v.setTextSize(size);v.setTextColor(color);v.setLineSpacing(dp(4),1);v.setPadding(0,dp(5),0,dp(5));if(bold)v.setTypeface(Typeface.DEFAULT,Typeface.BOLD);return v;}
+    private TextView label(String text,int size,int color,boolean bold){TextView v=new TextView(this);v.setText(text);v.setTextDirection(View.TEXT_DIRECTION_FIRST_STRONG);v.setTextSize(size);v.setTextColor(color);v.setLineSpacing(dp(4),1);v.setPadding(0,dp(5),0,dp(5));if(bold)v.setTypeface(Typeface.DEFAULT,Typeface.BOLD);return v;}
     private EditText edit(String hint,String value,boolean password){EditText e=new EditText(this);e.setHint(hint);e.setText(value);e.setTextSize(15);e.setTextColor(INK);e.setSingleLine(true);e.setPadding(dp(10),dp(12),dp(10),dp(12));e.setInputType(InputType.TYPE_CLASS_TEXT|(password?InputType.TYPE_TEXT_VARIATION_PASSWORD:0));return e;}
     private Button button(String text,boolean primary,Runnable action){Button b=new Button(this);b.setText(text);b.setAllCaps(false);b.setTextSize(14);b.setTextColor(primary?Color.WHITE:TEAL);GradientDrawable bg=new GradientDrawable();bg.setColor(primary?TEAL:Color.rgb(235,245,242));bg.setCornerRadius(dp(12));b.setBackground(bg);b.setPadding(dp(12),dp(6),dp(12),dp(6));LinearLayout.LayoutParams p=new LinearLayout.LayoutParams(-1,dp(48));p.setMargins(0,dp(10),0,0);b.setLayoutParams(p);b.setOnClickListener(v->{if("meeting".equals(screen)&&titleField!=null)prefs.edit().putString("last_title",titleField.getText().toString()).apply();stopPlayer();action.run();});return b;}
     private int dp(int n){return (int)(getResources().getDisplayMetrics().density*n+0.5f);}

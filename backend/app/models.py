@@ -1,4 +1,11 @@
+from typing import Literal
+
 from pydantic import BaseModel, ConfigDict, Field, field_validator, model_validator
+
+
+TranslationLanguage = Literal["en", "fr", "de", "es", "tr", "he", "ru", "el", "uk", "zh", "fa", "ur"]
+SpeechLanguage = Literal["ar", "en", "fr", "de", "es", "tr", "he", "ru", "el", "uk", "zh", "fa", "ur",
+                         "mul", "other", "unknown"]
 
 
 class StrictModel(BaseModel):
@@ -36,6 +43,20 @@ class Speaker(StrictModel):
     def meaningful_value(cls, value):
         if not value.strip():
             raise ValueError("Speaker values must not be blank")
+        return value
+
+
+class SpeechAnnotation(StrictModel):
+    segment_id: str = Field(min_length=1, max_length=128)
+    language: SpeechLanguage
+    status: Literal["clear", "unclear", "uninterpretable"]
+    reason: str = Field(min_length=1, max_length=300)
+
+    @field_validator("segment_id", "reason")
+    @classmethod
+    def meaningful_value(cls, value):
+        if not value.strip():
+            raise ValueError("Speech annotation values must not be blank")
         return value
 
 
@@ -105,6 +126,13 @@ class Minutes(StrictModel):
     decisions: list[Decision] = Field(max_length=100)
     action_items: list[ActionItem] = Field(max_length=100)
     open_questions: list[str] = Field(max_length=100)
+    speech_annotations: list[SpeechAnnotation] = Field(default_factory=list, max_length=2000)
+
+    def validate_annotation_ids(self, valid_ids: set[str]):
+        if self.speech_annotations:
+            identifiers = [item.segment_id for item in self.speech_annotations]
+            if len(identifiers) != len(set(identifiers)) or set(identifiers) != valid_ids:
+                raise ValueError("Speech annotations must cover each existing segment exactly once")
 
     @field_validator("summary")
     @classmethod
@@ -128,3 +156,44 @@ class MeetingAnalysis(StrictModel):
     segments: list[Segment]
     speakers: list[Speaker]
     minutes: Minutes
+
+
+class TranslationRequest(StrictModel):
+    meeting: MeetingAnalysis
+    target_language: TranslationLanguage
+
+    @model_validator(mode="after")
+    def grounded_source(self):
+        source = self.meeting.model_dump(exclude={"minutes"})
+        SummaryRequest.model_validate(source)
+        valid_ids = {segment.id for segment in self.meeting.segments}
+        self.meeting.minutes.validate_annotation_ids(valid_ids)
+        for item in [*self.meeting.minutes.decisions, *self.meeting.minutes.action_items]:
+            if not set(item.segment_ids).issubset(valid_ids):
+                raise ValueError("Minutes must cite existing transcript segments")
+        return self
+
+
+class TranslatedSegment(StrictModel):
+    id: str = Field(min_length=1, max_length=128)
+    text: str = Field(min_length=1, max_length=20_000)
+
+    @field_validator("id", "text")
+    @classmethod
+    def meaningful_value(cls, value):
+        if not value.strip():
+            raise ValueError("Translation values must not be blank")
+        return value
+
+
+class MeetingTranslation(StrictModel):
+    target_language: TranslationLanguage
+    translated_report: str = Field(min_length=1, max_length=100_000)
+    segments: list[TranslatedSegment] = Field(max_length=2000)
+
+    @field_validator("translated_report")
+    @classmethod
+    def meaningful_report(cls, value):
+        if not value.strip():
+            raise ValueError("The translated report must not be blank")
+        return value

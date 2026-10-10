@@ -16,6 +16,8 @@ import java.io.InterruptedIOException;
 import java.net.SocketTimeoutException;
 import java.net.UnknownHostException;
 import java.nio.charset.StandardCharsets;
+import java.util.Arrays;
+import java.util.Collections;
 import java.util.HashSet;
 import java.util.Locale;
 import java.util.Set;
@@ -29,6 +31,8 @@ public final class MeetingApi {
     private static final long MAX_REFERENCE_BYTES = 1_000_000L;
     private static final int MAX_RESPONSE_BYTES = 4 * 1024 * 1024;
     private static final int MAX_JSON_REQUEST_BYTES = 2_000_000;
+    private static final Set<String> TRANSLATION_TARGETS = Collections.unmodifiableSet(new HashSet<>(Arrays.asList(
+            "en", "fr", "de", "es", "tr", "he", "ru", "el", "uk", "zh", "fa", "ur")));
 
     private MeetingApi() { }
 
@@ -138,12 +142,13 @@ public final class MeetingApi {
             String token = validateToken(accessToken);
             connection = open(validateBaseUrl(baseUrl), "/v1/status", token, "GET", 15_000);
             JSONObject result = new JSONObject(readResponse(connection, token));
-            if (!"ok".equals(result.optString("status")) || !"0.2".equals(result.optString("version"))
+            String version = result.optString("version");
+            if (!"ok".equals(result.optString("status")) || !("0.2".equals(version) || "0.3".equals(version))
                     || !positiveInteger(result.opt("max_audio_bytes"))
                     || !positiveInteger(result.opt("max_duration_seconds"))
                     || !(result.opt("reference_speakers") instanceof Number)
                     || result.getDouble("reference_speakers") != 4) {
-                throw new Exception("ردّ الخدمة لا يطابق إمكانات إصدار مجلس 0.2. حدّث الخادم ثم أعد المحاولة.");
+                throw new Exception("ردّ الخدمة لا يطابق إمكانات مجلس 0.2 أو 0.3. حدّث الخادم ثم أعد المحاولة.");
             }
             JSONArray formats = result.optJSONArray("formats");
             Set<String> supported = new HashSet<>();
@@ -209,6 +214,78 @@ public final class MeetingApi {
         }
     }
 
+    /** Translates an explicitly approved text report without sending audio or local metadata. */
+    public static JSONObject translate(String baseUrl, String accessToken, JSONObject meeting,
+                                       String targetLanguage) throws Exception {
+        String target = targetLanguage == null ? "" : targetLanguage.trim();
+        if (!TRANSLATION_TARGETS.contains(target)) {
+            throw new Exception("اختر لغة ترجمة مدعومة: الإنجليزية، الفرنسية، الألمانية، الإسبانية، التركية، "
+                    + "العبرية، الروسية، اليونانية، الأوكرانية، الصينية، الفارسية أو الأردية.");
+        }
+        if (meeting == null) throw new Exception("محضر الاجتماع غير موجود.");
+        JSONObject cleanMeeting;
+        try {
+            cleanMeeting = analysisFields(meeting);
+        } catch (Exception e) {
+            throw new Exception("محضر الاجتماع غير صالح للترجمة. راجع النص والمتحدثين والمراجع أولًا.");
+        }
+        JSONArray sourceSegments = cleanMeeting.getJSONArray("segments");
+        if (sourceSegments.length() > 2000) throw new Exception("عدد مقاطع النص يتجاوز حد الترجمة: 2000 مقطع.");
+        JSONObject payload = new JSONObject().put("meeting", cleanMeeting).put("target_language", target);
+        byte[] bytes = payload.toString().getBytes(StandardCharsets.UTF_8);
+        if (bytes.length > MAX_JSON_REQUEST_BYTES) throw new Exception("المحضر يتجاوز الحد المسموح للترجمة.");
+        HttpURLConnection connection = null;
+        try {
+            String token = validateToken(accessToken);
+            connection = open(validateBaseUrl(baseUrl), "/v1/meetings/translate", token,
+                    "POST", 15 * 60 * 1000);
+            connection.setDoOutput(true);
+            connection.setRequestProperty("Content-Type", "application/json; charset=UTF-8");
+            connection.setFixedLengthStreamingMode(bytes.length);
+            try (OutputStream output = connection.getOutputStream()) {
+                writeBytes(output, bytes);
+            }
+            return translationResponse(readResponse(connection, token), target, sourceSegments);
+        } catch (SocketTimeoutException e) {
+            throw new Exception("انتهت مهلة الترجمة. بقي المحضر الأصلي محفوظًا ويمكن إعادة المحاولة.");
+        } catch (UnknownHostException e) {
+            throw new Exception("تعذر العثور على خدمة المعالجة. تحقق من عنوانها والاتصال بالإنترنت.");
+        } catch (SSLException e) {
+            throw new Exception("تعذر إنشاء اتصال HTTPS موثوق. تحقق من شهادة خدمة المعالجة.");
+        } catch (InterruptedIOException e) {
+            throw new Exception("أُلغي طلب الترجمة. بقي المحضر الأصلي محفوظًا.");
+        } catch (IOException e) {
+            throw new Exception("تعذر إرسال المحضر أو قراءة الترجمة. بقي المحضر الأصلي محفوظًا؛ أعد المحاولة.");
+        } finally {
+            if (connection != null) connection.disconnect();
+        }
+    }
+
+    private static JSONObject translationResponse(String body, String target, JSONArray sourceSegments) throws Exception {
+        try {
+            JSONObject result = new JSONObject(body);
+            if (!target.equals(nonempty(result, "target_language"))) throw new Exception();
+            String report = nonempty(result, "translated_report");
+            if (report.length() > 100_000) throw new Exception();
+            JSONArray segments = result.getJSONArray("segments");
+            if (segments.length() != sourceSegments.length()) throw new Exception();
+            JSONArray cleanSegments = new JSONArray();
+            for (int i = 0; i < segments.length(); i++) {
+                JSONObject segment = segments.getJSONObject(i);
+                String id = nonempty(segment, "id");
+                String text = nonempty(segment, "text");
+                if (!id.equals(sourceSegments.getJSONObject(i).getString("id")) || text.length() > 20_000) {
+                    throw new Exception();
+                }
+                cleanSegments.put(new JSONObject().put("id", id).put("text", text));
+            }
+            return new JSONObject().put("target_language", target).put("translated_report", report)
+                    .put("segments", cleanSegments);
+        } catch (Exception e) {
+            throw new Exception("ردّ الترجمة ناقص أو غير صالح أو لا يطابق لغة ومقاطع الاجتماع. بقي المحضر الأصلي محفوظًا.");
+        }
+    }
+
     static JSONObject transcriptPayload(JSONObject meeting) throws Exception {
         if (meeting == null) throw new Exception("محضر الاجتماع غير موجود.");
         validateResult(meeting);
@@ -235,26 +312,34 @@ public final class MeetingApi {
 
     private static JSONObject analysisResponse(String body) throws Exception {
         try {
-            JSONObject result = new JSONObject(body);
-            JSONObject clean = transcriptPayload(result);
-            JSONObject minutes = result.getJSONObject("minutes");
-            JSONObject cleanMinutes = copyFields(minutes, "summary", "discussion_points", "open_questions");
-            JSONArray decisions = new JSONArray(), actions = new JSONArray();
-            JSONArray originalDecisions = minutes.getJSONArray("decisions");
-            for (int i = 0; i < originalDecisions.length(); i++) {
-                decisions.put(copyFields(originalDecisions.getJSONObject(i), "text", "segment_ids"));
-            }
-            JSONArray originalActions = minutes.getJSONArray("action_items");
-            for (int i = 0; i < originalActions.length(); i++) {
-                actions.put(copyFields(originalActions.getJSONObject(i), "task", "owner", "due_date", "segment_ids"));
-            }
-            cleanMinutes.put("decisions", decisions);
-            cleanMinutes.put("action_items", actions);
-            clean.put("minutes", cleanMinutes);
-            return clean;
+            return analysisFields(new JSONObject(body));
         } catch (Exception e) {
             throw new Exception("ردّ خدمة المعالجة ناقص أو غير صالح. لم يُحفظ محضر فارغ؛ تحقق من إعداد الخدمة.");
         }
+    }
+
+    private static JSONObject analysisFields(JSONObject result) throws Exception {
+        JSONObject clean = transcriptPayload(result);
+        JSONObject minutes = result.getJSONObject("minutes");
+        JSONObject cleanMinutes = copyFields(minutes, "summary", "discussion_points", "open_questions");
+        JSONArray decisions = new JSONArray(), actions = new JSONArray(), annotations = new JSONArray();
+        JSONArray originalDecisions = minutes.getJSONArray("decisions");
+        for (int i = 0; i < originalDecisions.length(); i++) {
+            decisions.put(copyFields(originalDecisions.getJSONObject(i), "text", "segment_ids"));
+        }
+        JSONArray originalActions = minutes.getJSONArray("action_items");
+        for (int i = 0; i < originalActions.length(); i++) {
+            actions.put(copyFields(originalActions.getJSONObject(i), "task", "owner", "due_date", "segment_ids"));
+        }
+        JSONArray originalAnnotations = minutes.optJSONArray("speech_annotations");
+        if (originalAnnotations != null) for (int i = 0; i < originalAnnotations.length(); i++) {
+            annotations.put(copyFields(originalAnnotations.getJSONObject(i), "segment_id", "language", "status", "reason"));
+        }
+        cleanMinutes.put("decisions", decisions);
+        cleanMinutes.put("action_items", actions);
+        cleanMinutes.put("speech_annotations", annotations);
+        clean.put("minutes", cleanMinutes);
+        return clean;
     }
 
     private static HttpURLConnection open(String base, String endpoint, String token,
@@ -429,6 +514,7 @@ public final class MeetingApi {
         nonempty(minutes, "summary");
         validateStrings(minutes.getJSONArray("discussion_points"));
         validateStrings(minutes.getJSONArray("open_questions"));
+        validateSpeechAnnotations(minutes, segmentIds);
         JSONArray decisions = minutes.getJSONArray("decisions");
         if (silence && decisions.length() != 0) throw new Exception();
         for (int i = 0; i < decisions.length(); i++) {
@@ -444,6 +530,27 @@ public final class MeetingApi {
             validateNullableString(action, "owner");
             validateNullableString(action, "due_date");
             validateCitations(action.getJSONArray("segment_ids"), segmentIds);
+        }
+    }
+
+    /** Optional provider observations; missing or empty arrays keep legacy meetings compatible. */
+    private static void validateSpeechAnnotations(JSONObject minutes, Set<String> segmentIds) throws Exception {
+        if (!minutes.has("speech_annotations")) return;
+        JSONArray annotations = minutes.getJSONArray("speech_annotations");
+        if (annotations.length() == 0) return;
+        if (annotations.length() > 2000 || annotations.length() != segmentIds.size()) throw new Exception();
+        Set<String> seen = new HashSet<>();
+        for (int i = 0; i < annotations.length(); i++) {
+            JSONObject annotation = annotations.getJSONObject(i);
+            String id = nonempty(annotation, "segment_id");
+            String language = nonempty(annotation, "language");
+            String status = nonempty(annotation, "status");
+            String reason = nonempty(annotation, "reason");
+            if (!segmentIds.contains(id) || !seen.add(id)
+                    || !(TRANSLATION_TARGETS.contains(language) || language.equals("ar") || language.equals("mul")
+                    || language.equals("other") || language.equals("unknown"))
+                    || !(status.equals("clear") || status.equals("unclear") || status.equals("uninterpretable"))
+                    || reason.length() > 300) throw new Exception();
         }
     }
 

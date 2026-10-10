@@ -51,6 +51,14 @@ import xml.etree.ElementTree as ET
 ET.register_namespace("android", "http://schemas.android.com/apk/res/android")
 manifest = ET.parse(sys.argv[1])
 manifest.getroot().set("package", "com.majlis.app")
+# Direct AAPT2 linking must include uses-sdk explicitly; Gradle normally
+# merges this element from defaultConfig. Keep the offline manifest equivalent.
+uses_sdk = manifest.getroot().find("uses-sdk")
+if uses_sdk is None:
+    uses_sdk = ET.Element("uses-sdk")
+    manifest.getroot().insert(0, uses_sdk)
+uses_sdk.set("{http://schemas.android.com/apk/res/android}minSdkVersion", "26")
+uses_sdk.set("{http://schemas.android.com/apk/res/android}targetSdkVersion", "35")
 application = manifest.getroot().find("application")
 if application is None:
     raise SystemExit("AndroidManifest.xml has no application element")
@@ -114,21 +122,31 @@ fi
 "$BUILD_TOOLS_DIR/aapt2" dump badging "$APK_PATH" > "$BUILD_DIR/apk-metadata.txt"
 python3 - "$APK_PATH" "$BUILD_DIR/apk-metadata.txt" "$VERSION_CODE" "$VERSION_NAME" <<'PY'
 import sys
+import re
 import zipfile
 from pathlib import Path
 
 apk, metadata_file, version_code, version_name = sys.argv[1:]
 metadata = Path(metadata_file).read_text(encoding="utf-8")
-required = (
-    "package: name='com.majlis.app'",
-    f"versionCode='{version_code}'",
-    f"versionName='{version_name}'",
-    "sdkVersion:'26'",
-    "targetSdkVersion:'35'",
-)
-for expected in required:
-    if expected not in metadata:
-        raise SystemExit(f"APK metadata mismatch: {expected}")
+def mismatch(expected):
+    print("AAPT2 APK badging:\n" + metadata, file=sys.stderr)
+    raise SystemExit(f"APK metadata mismatch: {expected}")
+
+package_line = re.search(r"^\s*package\s*:\s*(.*)$", metadata, re.MULTILINE)
+if package_line is None:
+    mismatch("package declaration")
+package_attributes = dict(re.findall(r"(\w+)\s*=\s*'([^']*)'", package_line.group(1)))
+for attribute, expected in (
+    ("name", "com.majlis.app"),
+    ("versionCode", version_code),
+    ("versionName", version_name),
+):
+    if package_attributes.get(attribute) != expected:
+        mismatch(f"{attribute}={expected}")
+for label, expected in (("sdkVersion", "26"), ("targetSdkVersion", "35")):
+    value = re.search(r"^\s*" + label + r"\s*:\s*['\"]?(\d+)['\"]?\s*$", metadata, re.MULTILINE)
+    if value is None or value.group(1) != expected:
+        mismatch(f"{label}={expected}")
 with zipfile.ZipFile(apk) as archive:
     for required_file in ("AndroidManifest.xml", "classes.dex", "resources.arsc"):
         if required_file not in archive.namelist():

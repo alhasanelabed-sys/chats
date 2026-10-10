@@ -1,12 +1,14 @@
 #!/usr/bin/env python3
 """Exercise the installable APK through Android's accessibility hierarchy.
 
-This uses a fresh emulator and public Arabic UI controls. It does not contact
-an analysis provider or measure microphone/speaker-recognition quality.
+This uses a fresh emulator and public Arabic UI controls, including Android's
+native recorder. It does not contact an analysis provider or measure physical
+microphone, transcription, speaker-recognition, or translation quality.
 """
 
 import argparse
 import json
+import math
 import re
 import subprocess
 import time
@@ -18,6 +20,7 @@ PACKAGE = "com.majlis.app"
 COMPONENT = PACKAGE + "/.MainActivity"
 DEMO_TITLE = "مثال تجريبي: إطلاق المنتج"
 CORRECTED_TEXT = "reviewed_transcript_2026"
+TEST_NOTES = "emulator_native_recorder_no_physical_microphone"
 
 
 class Smoke:
@@ -42,7 +45,7 @@ class Smoke:
                 raw = self.adb("shell", "cat", "/sdcard/majlis-smoke.xml")
                 self.last_xml = ET.fromstring(raw)
                 return self.last_xml
-            except (ET.ParseError, subprocess.CalledProcessError):
+            except (ET.ParseError, subprocess.CalledProcessError, subprocess.TimeoutExpired):
                 if attempt == 2:
                     raise AssertionError("Android did not return a valid accessibility hierarchy")
                 time.sleep(0.5)
@@ -101,6 +104,44 @@ class Smoke:
     def tap(self, text):
         self.tap_node(self.text(text))
 
+    def paired_controls(self, first, second):
+        """Get neighboring full-width controls from one idle hierarchy."""
+        pair = []
+
+        def neighboring(node):
+            if node.get("text") != second or not self.bounds(node):
+                return False
+            first_node = next(
+                (item for item in self.last_xml.iter("node")
+                 if item.get("text") == first and item.get("enabled") == "true"
+                 and self.bounds(item)), None,
+            )
+            if first_node is None:
+                return False
+            a, b = self.bounds(first_node), self.bounds(node)
+            height = a[3] - a[1]
+            if a[0] != b[0] or a[2] != b[2] or height != b[3] - b[1] or not 0 < b[1] - a[3] < height:
+                return False
+            pair[:] = [first_node, node]
+            return True
+
+        self.find(neighboring, first + " / " + second + " with complete neighboring bounds")
+        return tuple(pair)
+
+    def preferences(self):
+        raw = self.adb("exec-out", "run-as", PACKAGE, "cat", "shared_prefs/majlis.xml")
+        tree = ET.fromstring(raw)
+        return {node.get("name"): node.get("value", node.text or "") for node in tree}
+
+    def timer_seconds(self):
+        node = self.find(
+            lambda item: item.get("package") == PACKAGE
+            and re.fullmatch(r"\d{2,}:\d{2}", item.get("text", "")) is not None,
+            "native recording timer",
+        )
+        minutes, seconds = (int(part) for part in node.get("text").split(":"))
+        return minutes * 60 + seconds
+
     def record(self, name):
         tree = self.snapshot()
         (self.output / (name + ".xml")).write_bytes(ET.tostring(tree, encoding="utf-8"))
@@ -153,7 +194,135 @@ class Smoke:
         if not pdf.startswith(b"%PDF-") or b"%%EOF" not in pdf[-1024:] or len(pdf) < 500:
             raise AssertionError("The native document flow did not create a complete PDF in Downloads")
         (self.output / "majlis-smoke.pdf").write_bytes(pdf)
-        self.record("08-exported-pdf")
+        self.record("13-exported-pdf")
+
+    def native_recording(self):
+        self.tap("أعلمت المشاركين بالتسجيل وحصلت على موافقتهم")
+        start, future_pause = self.paired_controls("بدء التسجيل", "استيراد ملف صوتي")
+        self.record("02-recording-controls-ready")
+        # MainActivity inserts an identically sized pause row directly after
+        # the record button. Its first position is the cached import row's
+        # bounds. Avoid waitForIdle while the recording timer changes every
+        # 500 ms; all subsequent controls come from a paused hierarchy.
+        self.tap_node(start)
+        for _ in range(20):
+            if self.preferences().get("recording_incomplete") == "true":
+                break
+            time.sleep(0.25)
+        else:
+            raise AssertionError("The native recording did not start")
+        time.sleep(3)
+        service = self.adb("shell", "dumpsys", "activity", "services", PACKAGE)
+        (self.output / "recording-service.txt").write_text(service, encoding="utf-8")
+        if "RecordingService" not in service or "isForeground=true" not in service:
+            raise AssertionError("The microphone recorder is not running as a foreground service")
+        (self.output / "recording-active.png").write_bytes(
+            self.adb("exec-out", "screencap", "-p", binary=True)
+        )
+        self.tap_node(future_pause)
+        self.text("التسجيل متوقف مؤقتًا • الوقت ثابت")
+        paused_seconds = self.timer_seconds()
+        if paused_seconds < 2:
+            raise AssertionError("The native recording timer did not advance before pausing")
+        self.record("03-recording-paused")
+        time.sleep(2.2)
+        if self.timer_seconds() != paused_seconds:
+            raise AssertionError("Paused recording time advanced")
+        self.record("04-recording-pause-time-stable")
+
+        _, resume = self.paired_controls("إنهاء التسجيل", "متابعة التسجيل")
+        self.tap_node(resume)
+        time.sleep(2.5)
+        self.tap_node(resume)
+        self.text("التسجيل متوقف مؤقتًا • الوقت ثابت")
+        resumed_seconds = self.timer_seconds()
+        if resumed_seconds <= paused_seconds:
+            raise AssertionError("The native recording timer did not advance after resuming")
+        self.record("05-recording-resumed-and-paused")
+        stop, _ = self.paired_controls("إنهاء التسجيل", "متابعة التسجيل")
+        self.tap_node(stop)
+        self.text("التسجيل محفوظ على الجهاز • جاهز للتحليل")
+        prefs = self.preferences()
+        if prefs.get("recording_incomplete") != "false":
+            raise AssertionError("The recording was not finalized")
+        path = prefs.get("last_audio", "")
+        if not re.fullmatch(r"/data/(?:user/0|data)/com\.majlis\.app/files/recordings/meeting_\d+\.m4a", path):
+            raise AssertionError("The recording was not saved in app-private storage")
+        audio = self.adb("exec-out", "run-as", PACKAGE, "cat", path, binary=True)
+        if len(audio) < 500:
+            raise AssertionError("The finalized recording is unexpectedly small")
+        recording = self.output / "native-recording.m4a"
+        recording.write_bytes(audio)
+        result = subprocess.run(
+            ["ffprobe", "-v", "error", "-select_streams", "a:0", "-show_streams",
+             "-show_format", "-of", "json", str(recording)],
+            check=False, capture_output=True, text=True, timeout=30,
+        )
+        (self.output / "native-recording-ffprobe.json").write_text(result.stdout, encoding="utf-8")
+        (self.output / "native-recording-ffprobe-errors.txt").write_text(result.stderr, encoding="utf-8")
+        if result.returncode != 0:
+            raise AssertionError("FFprobe could not read the native recording; see native-recording-ffprobe-errors.txt")
+        probe = json.loads(result.stdout)
+        streams = probe.get("streams", [])
+        if (len(streams) != 1 or streams[0].get("codec_name") != "aac"
+                or streams[0].get("channels") != 1 or streams[0].get("sample_rate") != "32000"):
+            raise AssertionError("The native recorder did not produce 32 kHz mono AAC")
+        container = probe.get("format", {})
+        if "m4a" not in container.get("format_name", "").split(","):
+            raise AssertionError("The native recorder did not produce an M4A container")
+        duration = float(container.get("duration", "0"))
+        if not math.isfinite(duration) or duration < 3 or abs(duration - resumed_seconds) > 2:
+            raise AssertionError("Saved AAC duration differs from the active recording timer")
+        (self.output / "native-recording-result.json").write_text(json.dumps({
+            "paused_timer_seconds": paused_seconds,
+            "resumed_timer_seconds": resumed_seconds,
+            "encoded_duration_seconds": duration,
+            "bytes": len(audio),
+            "physical_microphone_quality_measured": False,
+        }, indent=2), encoding="utf-8")
+        self.record("06-native-aac-saved")
+
+    def translation_without_service(self):
+        self.tap("ترجمة اللقاء")
+        self.text("لغة الترجمة", scroll=False)
+        for language in ("الإنجليزية", "الفرنسية", "الألمانية", "الإسبانية", "التركية"):
+            self.text(language, scroll=False)
+        self.record("14-translation-language-chooser")
+        self.tap("الإنجليزية")
+        self.text("ترجمة اللقاء · en")
+        self.text("إنشاء الترجمة")
+        self.record("15-translation-page")
+        prefs = self.preferences()
+        if prefs.get("server_url") or prefs.get("access_token"):
+            raise AssertionError("This smoke must run without a configured analysis service")
+        self.tap("إنشاء الترجمة")
+        self.text("اضبط رابط الخدمة ورمز الوصول في الإعدادات أولًا.", scroll=False)
+        self.record("16-translation-needs-service-without-upload")
+        self.tap("حسنًا")
+        self.tap("المحضر والملخص")
+        self.text(DEMO_TITLE)
+
+    def documented_test_mode(self):
+        self.tap("تجربة قياس موثقة")
+        self.text("تفعيل الاختبار", scroll=False)
+        self.tap("تفعيل الاختبار")
+        # An empty note must keep the dialog open. No distance, participant
+        # identity, or independent accuracy result can be inferred here.
+        self.text("تفعيل الاختبار", scroll=False)
+        self.find(lambda item: item.get("class") == "android.widget.EditText", "test conditions", scroll=False)
+        if self.preferences().get("test_mode") == "true":
+            raise AssertionError("An empty conditions note activated test mode")
+        self.record("19-test-conditions-required")
+        self.replace_edit_text(TEST_NOTES)
+        self.tap("تفعيل الاختبار")
+        self.text("وضع الاختبار: " + TEST_NOTES)
+        self.record("20-documented-test-active")
+        self.tap("إلغاء وضع الاختبار")
+        self.text("تجربة قياس موثقة")
+        prefs = self.preferences()
+        if prefs.get("test_mode") == "true" or prefs.get("test_notes"):
+            raise AssertionError("Canceling test mode did not remove its saved conditions")
+        self.record("21-documented-test-canceled")
 
     def run(self, apk):
         self.adb("wait-for-device")
@@ -167,23 +336,25 @@ class Smoke:
         self.text("اجتماع جديد")
         self.record("01-meeting")
 
+        self.native_recording()
+
         self.tap("تجربة اجتماع بمحتوى تجريبي")
         self.text(DEMO_TITLE)
-        self.record("02-demo-minutes")
+        self.record("07-demo-minutes")
         self.tap("النص الكامل")
         self.text("نراجع اليوم جاهزية إطلاق المنتج. نحتاج إلى اختبار النسخة قبل موعد الإطلاق.")
-        self.record("03-transcript")
+        self.record("08-transcript")
         self.tap("تعديل النص والمتحدث")
         self.replace_edit_text()
         self.tap("حفظ التعديل")
         self.text("النص تغيّر؛ المحضر يحتاج إعادة تلخيص ومراجعة.")
         self.text(CORRECTED_TEXT)
-        self.record("04-corrected-transcript")
+        self.record("09-corrected-transcript")
 
         self.tap("حفظ المثال التجريبي")
         self.tap("المحاضر")
         self.text(DEMO_TITLE)
-        self.record("05-history-saved")
+        self.record("10-history-saved")
 
         # Native activity/process recreation proves the edit was persisted,
         # rather than merely displayed in the current activity instance.
@@ -193,25 +364,27 @@ class Smoke:
         self.tap("فتح المحضر")
         self.tap("النص الكامل")
         self.text(CORRECTED_TEXT)
-        self.record("06-correction-after-restart")
+        self.record("11-correction-after-restart")
 
         self.tap("المحضر والملخص")
         self.tap("تصدير المحضر")
         self.text("PDF", partial=True, scroll=False)
         self.text("JSON", partial=True, scroll=False)
         self.text("نص", scroll=False)
-        self.record("07-export-options")
+        self.record("12-export-options")
         self.export_pdf()
+        self.translation_without_service()
 
         self.tap("الأصوات")
-        self.record("09-voice-profiles")
+        self.record("17-voice-profiles")
         self.tap("الإعدادات")
         self.text("خدمة التحليل")
         self.text("اختبار الاتصال")
-        self.record("10-settings")
+        self.record("18-settings")
         self.tap("الاجتماع")
         self.text("اجتماع جديد")
-        self.record("11-return-to-meeting")
+        self.documented_test_mode()
+        self.record("22-return-to-meeting")
 
     def logs(self):
         full = self.adb("logcat", "-d", "-v", "threadtime")
@@ -240,7 +413,7 @@ def main():
         raise
     finally:
         smoke.logs()
-    print("Android UI smoke passed; cloud analysis and audio quality were not exercised.")
+    print("Android UI and native AAC recording smoke passed; live analysis and physical microphone/AI quality were not exercised.")
 
 
 if __name__ == "__main__":

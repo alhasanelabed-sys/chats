@@ -12,7 +12,7 @@ from starlette.exceptions import HTTPException as StarletteHTTPException
 from starlette.formparsers import MultiPartException
 
 from .media import save_and_normalize_audio, save_m4a
-from .models import MeetingAnalysis, Participant, SummaryRequest
+from .models import MeetingAnalysis, MeetingTranslation, Participant, SummaryRequest, TranslationRequest
 from .provider import OpenAIProvider, ProviderFailure
 from .settings import Settings
 
@@ -29,6 +29,18 @@ def check_content_length(request: Request, limit: int):
             raise HTTPException(400, "حجم الطلب غير صالح.") from None
 
 
+async def read_bounded_json(request: Request, limit: int) -> bytearray:
+    check_content_length(request, limit)
+    if request.headers.get("content-type", "").split(";", 1)[0].strip().lower() != "application/json":
+        raise HTTPException(422, "يلزم إرسال نص الاجتماع بصيغة JSON.")
+    body = bytearray()
+    async for chunk in request.stream():
+        if len(body) + len(chunk) > limit:
+            raise HTTPException(413, "حجم نص الاجتماع يتجاوز الحد المسموح.")
+        body.extend(chunk)
+    return body
+
+
 def create_app(settings: Settings | None = None, provider: OpenAIProvider | None = None) -> FastAPI:
     @asynccontextmanager
     async def lifespan(app):
@@ -41,7 +53,7 @@ def create_app(settings: Settings | None = None, provider: OpenAIProvider | None
         finally:
             await app.state.provider.close()
 
-    application = FastAPI(title="Majlis meeting analysis", version="0.2", lifespan=lifespan)
+    application = FastAPI(title="Majlis meeting analysis", version="0.3", lifespan=lifespan)
 
     async def authorize(request: Request):
         expected = f"Bearer {request.app.state.settings.access_token}".encode("utf-8")
@@ -56,7 +68,7 @@ def create_app(settings: Settings | None = None, provider: OpenAIProvider | None
     @application.get("/v1/status", dependencies=[Depends(authorize)])
     async def status(request: Request):
         configuration = request.app.state.settings
-        return {"status": "ok", "version": "0.2", "max_audio_bytes": configuration.max_audio_bytes,
+        return {"status": "ok", "version": "0.3", "max_audio_bytes": configuration.max_audio_bytes,
                 "max_duration_seconds": configuration.max_duration_seconds,
                 "formats": ["m4a", "mp3", "wav"], "reference_speakers": 4}
 
@@ -64,14 +76,7 @@ def create_app(settings: Settings | None = None, provider: OpenAIProvider | None
                       dependencies=[Depends(authorize)])
     async def summarize(request: Request):
         configuration = request.app.state.settings
-        check_content_length(request, configuration.max_summary_request_bytes)
-        if request.headers.get("content-type", "").split(";", 1)[0].strip().lower() != "application/json":
-            raise HTTPException(422, "يلزم إرسال نص الاجتماع بصيغة JSON.")
-        body = bytearray()
-        async for chunk in request.stream():
-            if len(body) + len(chunk) > configuration.max_summary_request_bytes:
-                raise HTTPException(413, "حجم نص الاجتماع يتجاوز الحد المسموح.")
-            body.extend(chunk)
+        body = await read_bounded_json(request, configuration.max_summary_request_bytes)
         try:
             transcript = SummaryRequest.model_validate_json(body)
         except ValidationError:
@@ -84,6 +89,22 @@ def create_app(settings: Settings | None = None, provider: OpenAIProvider | None
             )
         except ProviderFailure:
             raise HTTPException(502, "تعذر إعداد المحضر لدى مزود الخدمة. تحقق من إعدادات الخادم ثم أعد المحاولة.") from None
+
+    @application.post("/v1/meetings/translate", response_model=MeetingTranslation,
+                      dependencies=[Depends(authorize)])
+    async def translate(request: Request):
+        configuration = request.app.state.settings
+        body = await read_bounded_json(request, configuration.max_summary_request_bytes)
+        try:
+            translation = TranslationRequest.model_validate_json(body)
+        except ValidationError:
+            raise HTTPException(422, "لغة الترجمة أو نص الاجتماع أو أدلة المحضر غير صالحة.") from None
+        if translation.meeting.duration_seconds > configuration.max_duration_seconds:
+            raise HTTPException(422, "يتجاوز الاجتماع الحد الأقصى البالغ 60 دقيقة.")
+        try:
+            return await request.app.state.provider.translate(translation.meeting, translation.target_language)
+        except ProviderFailure:
+            raise HTTPException(502, "تعذرت ترجمة الاجتماع لدى مزود الخدمة. تحقق من إعدادات الخادم ثم أعد المحاولة.") from None
 
     @application.post("/v1/meetings/analyze", response_model=MeetingAnalysis,
                       dependencies=[Depends(authorize)])
