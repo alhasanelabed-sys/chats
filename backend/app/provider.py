@@ -77,6 +77,12 @@ class OpenAIProvider:
                 "audio/transcriptions", files=[("file", ("meeting.m4a", audio, "audio/mp4")), *fields],
             )
         segments, speakers = self._parse_transcript(raw, duration, reference_names)
+        return await self.summarize(title, duration, segments, speakers)
+
+    async def summarize(
+        self, title: str, duration: float, segments: list[Segment], speakers: list[Speaker],
+    ) -> MeetingAnalysis:
+        """Regenerate minutes for an edited transcript without retranscribing audio."""
         if segments:
             minutes = await self._summarize(title, segments, speakers)
         else:

@@ -1,6 +1,7 @@
 package com.majlis.app;
 
 import org.json.JSONArray;
+import org.json.JSONException;
 import org.json.JSONObject;
 
 import java.io.ByteArrayOutputStream;
@@ -11,6 +12,7 @@ import java.io.InputStream;
 import java.io.OutputStream;
 import java.net.HttpURLConnection;
 import java.net.URI;
+import java.io.InterruptedIOException;
 import java.net.SocketTimeoutException;
 import java.net.UnknownHostException;
 import java.nio.charset.StandardCharsets;
@@ -26,6 +28,7 @@ public final class MeetingApi {
     private static final long MAX_AUDIO_BYTES = 24_000_000L;
     private static final long MAX_REFERENCE_BYTES = 1_000_000L;
     private static final int MAX_RESPONSE_BYTES = 4 * 1024 * 1024;
+    private static final int MAX_JSON_REQUEST_BYTES = 2_000_000;
 
     private MeetingApi() { }
 
@@ -60,15 +63,12 @@ public final class MeetingApi {
     public static JSONObject analyze(String baseUrl, String accessToken, File audio,
                                      String title, JSONArray profiles) throws Exception {
         String base = validateBaseUrl(baseUrl);
-        validateAudio(audio, MAX_AUDIO_BYTES, "التسجيل");
+        validateAudio(audio, MAX_AUDIO_BYTES, "التسجيل", false);
         String meetingTitle = title == null ? "" : title.trim();
         if (meetingTitle.isEmpty() || meetingTitle.length() > 160) {
             throw new Exception("أدخل عنوان اجتماع بين حرف واحد و160 حرفًا.");
         }
-        String token = accessToken == null ? "" : accessToken.trim();
-        if (token.indexOf('\r') >= 0 || token.indexOf('\n') >= 0) {
-            throw new Exception("رمز الوصول غير صالح.");
-        }
+        String token = validateToken(accessToken);
         JSONArray references = profiles == null ? new JSONArray() : profiles;
         if (references.length() > 4) throw new Exception("يمكن إرسال أربعة مراجع صوتية كحد أقصى.");
         File[] referenceFiles = new File[references.length()];
@@ -87,7 +87,7 @@ public final class MeetingApi {
                 throw new Exception("بيانات أسماء المتحدثين غير صالحة؛ عدّلها قبل الإرسال.");
             }
             File reference = new File(profile.optString("path", ""));
-            validateAudio(reference, MAX_REFERENCE_BYTES, "المرجع الصوتي لـ " + name);
+            validateAudio(reference, MAX_REFERENCE_BYTES, "المرجع الصوتي لـ " + name, true);
             if (!recordingParent.equals(reference.getCanonicalFile().getParentFile())) {
                 throw new Exception("يجب أن يكون المرجع الصوتي محفوظًا داخل مجلد تسجيلات التطبيق.");
             }
@@ -102,16 +102,9 @@ public final class MeetingApi {
         String boundary = "Majlis-" + UUID.randomUUID();
         HttpURLConnection connection = null;
         try {
-            connection = (HttpURLConnection) new URI(base + "/v1/meetings/analyze").toURL().openConnection();
-            connection.setInstanceFollowRedirects(false);
-            connection.setRequestMethod("POST");
-            connection.setConnectTimeout(15_000);
-            connection.setReadTimeout(15 * 60 * 1000);
+            connection = open(base, "/v1/meetings/analyze", token, "POST", 15 * 60 * 1000);
             connection.setDoOutput(true);
-            connection.setUseCaches(false);
-            connection.setRequestProperty("Accept", "application/json");
             connection.setRequestProperty("Content-Type", "multipart/form-data; boundary=" + boundary);
-            if (!token.isEmpty()) connection.setRequestProperty("Authorization", "Bearer " + token);
             connection.setChunkedStreamingMode(64 * 1024);
             try (OutputStream output = connection.getOutputStream()) {
                 writeText(output, boundary, "title", meetingTitle);
@@ -122,39 +115,15 @@ public final class MeetingApi {
                 }
                 write(output, "--" + boundary + "--\r\n");
             }
-            int status = connection.getResponseCode();
-            if (status >= 300 && status < 400) {
-                throw new Exception("الخدمة أعادت توجيه الطلب. أدخل عنوان الخدمة النهائي مباشرةً لحماية رمز الوصول.");
-            }
-            String body;
-            InputStream stream = status >= 200 && status < 300
-                    ? connection.getInputStream() : connection.getErrorStream();
-            try (InputStream input = stream) {
-                body = input == null ? "" : read(input,
-                        status >= 200 && status < 300 ? MAX_RESPONSE_BYTES : 16 * 1024);
-            }
-            if (status < 200 || status >= 300) {
-                throw new Exception(responseError(status, body));
-            }
-            final JSONObject result;
-            try {
-                result = new JSONObject(body);
-                validateResult(result);
-                // Local record identities and paths are exclusively assigned by the app.
-                result.remove("_id");
-                result.remove("_saved_at");
-                result.remove("_audio_path");
-                result.remove("_demo");
-            } catch (Exception e) {
-                throw new Exception("ردّ خدمة المعالجة ناقص أو غير صالح. لم يُحفظ محضر فارغ؛ تحقق من إعداد الخدمة.");
-            }
-            return result;
+            return analysisResponse(readResponse(connection, token));
         } catch (SocketTimeoutException e) {
             throw new Exception("انتهت مهلة الاتصال بخدمة المعالجة. التسجيل محفوظ محليًا ويمكن إعادة المحاولة.");
         } catch (UnknownHostException e) {
             throw new Exception("تعذر العثور على خدمة المعالجة. تحقق من عنوانها والاتصال بالإنترنت.");
         } catch (SSLException e) {
             throw new Exception("تعذر إنشاء اتصال HTTPS موثوق. تحقق من شهادة خدمة المعالجة.");
+        } catch (InterruptedIOException e) {
+            throw new Exception("أُلغي الطلب. التسجيل محفوظ محليًا.");
         } catch (IOException e) {
             throw new Exception("تعذر إرسال التسجيل أو قراءة الرد. تحقق من الاتصال والخدمة ثم أعد المحاولة.");
         } finally {
@@ -162,12 +131,182 @@ public final class MeetingApi {
         }
     }
 
-    private static void validateAudio(File file, long limit, String label) throws Exception {
+    /** Checks credentials and capabilities; never sends a meeting, recording, or speaker reference. */
+    public static JSONObject status(String baseUrl, String accessToken) throws Exception {
+        HttpURLConnection connection = null;
+        try {
+            String token = validateToken(accessToken);
+            connection = open(validateBaseUrl(baseUrl), "/v1/status", token, "GET", 15_000);
+            JSONObject result = new JSONObject(readResponse(connection, token));
+            if (!"ok".equals(result.optString("status")) || !"0.2".equals(result.optString("version"))
+                    || !positiveInteger(result.opt("max_audio_bytes"))
+                    || !positiveInteger(result.opt("max_duration_seconds"))
+                    || !(result.opt("reference_speakers") instanceof Number)
+                    || result.getDouble("reference_speakers") != 4) {
+                throw new Exception("ردّ الخدمة لا يطابق إمكانات إصدار مجلس 0.2. حدّث الخادم ثم أعد المحاولة.");
+            }
+            JSONArray formats = result.optJSONArray("formats");
+            Set<String> supported = new HashSet<>();
+            if (formats != null) for (int i = 0; i < formats.length(); i++) {
+                if (!(formats.get(i) instanceof String)) throw new Exception("قائمة صيغ الخدمة غير صالحة.");
+                supported.add(formats.getString(i));
+            }
+            if (!supported.contains("m4a") || !supported.contains("mp3") || !supported.contains("wav")) {
+                throw new Exception("الخدمة لا تدعم صيغ M4A وMP3 وWAV المطلوبة. حدّث الخادم.");
+            }
+            return result;
+        } catch (SocketTimeoutException e) {
+            throw new Exception("انتهت مهلة فحص الخدمة. تحقق من العنوان والاتصال ثم أعد المحاولة.");
+        } catch (UnknownHostException e) {
+            throw new Exception("تعذر العثور على خدمة المعالجة. تحقق من عنوانها والاتصال بالإنترنت.");
+        } catch (SSLException e) {
+            throw new Exception("تعذر إنشاء اتصال HTTPS موثوق. تحقق من شهادة خدمة المعالجة.");
+        } catch (InterruptedIOException e) {
+            throw new Exception("أُلغي فحص الخدمة.");
+        } catch (JSONException e) {
+            throw new Exception("ردّ فحص الخدمة ليس JSON صالحًا أو يتضمن حقولًا ناقصة. تحقق من إعداد الخادم.");
+        } catch (IOException e) {
+            throw new Exception("تعذر الاتصال بخدمة المعالجة. تحقق من العنوان والاتصال ثم أعد المحاولة.");
+        } finally {
+            if (connection != null) connection.disconnect();
+        }
+    }
+
+    /** Rebuilds minutes from an explicitly approved transcript; local metadata is never serialized. */
+    public static JSONObject summarize(String baseUrl, String accessToken, JSONObject meeting) throws Exception {
+        JSONObject payload = transcriptPayload(meeting);
+        byte[] bytes = payload.toString().getBytes(StandardCharsets.UTF_8);
+        if (bytes.length > MAX_JSON_REQUEST_BYTES) throw new Exception("النص يتجاوز الحد المسموح لإعادة التلخيص.");
+        HttpURLConnection connection = null;
+        try {
+            String token = validateToken(accessToken);
+            connection = open(validateBaseUrl(baseUrl), "/v1/meetings/summarize", token,
+                    "POST", 15 * 60 * 1000);
+            connection.setDoOutput(true);
+            connection.setRequestProperty("Content-Type", "application/json; charset=UTF-8");
+            connection.setFixedLengthStreamingMode(bytes.length);
+            try (OutputStream output = connection.getOutputStream()) {
+                writeBytes(output, bytes);
+            }
+            JSONObject result = analysisResponse(readResponse(connection, token));
+            // Summary generation must not rewrite the user's corrected transcript or speaker labels.
+            if (!transcriptPayload(result).toString().equals(payload.toString())) {
+                throw new Exception("غيّرت الخدمة النص أو المتحدثين أثناء التلخيص. بقي المحضر السابق محفوظًا.");
+            }
+            return result;
+        } catch (SocketTimeoutException e) {
+            throw new Exception("انتهت مهلة إعادة التلخيص. بقي النص المعدّل محفوظًا ويمكن إعادة المحاولة.");
+        } catch (UnknownHostException e) {
+            throw new Exception("تعذر العثور على خدمة المعالجة. تحقق من عنوانها والاتصال بالإنترنت.");
+        } catch (SSLException e) {
+            throw new Exception("تعذر إنشاء اتصال HTTPS موثوق. تحقق من شهادة خدمة المعالجة.");
+        } catch (InterruptedIOException e) {
+            throw new Exception("أُلغي الطلب. بقي النص المعدّل محفوظًا.");
+        } catch (IOException e) {
+            throw new Exception("تعذر إرسال النص أو قراءة الرد. بقي النص المعدّل محفوظًا؛ أعد المحاولة.");
+        } finally {
+            if (connection != null) connection.disconnect();
+        }
+    }
+
+    static JSONObject transcriptPayload(JSONObject meeting) throws Exception {
+        if (meeting == null) throw new Exception("محضر الاجتماع غير موجود.");
+        validateResult(meeting);
+        JSONObject payload = copyFields(meeting, "title", "language", "duration_seconds");
+        JSONArray speakers = new JSONArray(), segments = new JSONArray();
+        JSONArray originalSpeakers = meeting.getJSONArray("speakers");
+        for (int i = 0; i < originalSpeakers.length(); i++) {
+            speakers.put(copyFields(originalSpeakers.getJSONObject(i), "id", "name", "matched_reference"));
+        }
+        JSONArray originalSegments = meeting.getJSONArray("segments");
+        for (int i = 0; i < originalSegments.length(); i++) {
+            segments.put(copyFields(originalSegments.getJSONObject(i), "id", "speaker_id", "start", "end", "text"));
+        }
+        payload.put("speakers", speakers);
+        payload.put("segments", segments);
+        return payload;
+    }
+
+    private static JSONObject copyFields(JSONObject source, String... keys) throws Exception {
+        JSONObject result = new JSONObject();
+        for (String key : keys) result.put(key, source.get(key));
+        return result;
+    }
+
+    private static JSONObject analysisResponse(String body) throws Exception {
+        try {
+            JSONObject result = new JSONObject(body);
+            JSONObject clean = transcriptPayload(result);
+            JSONObject minutes = result.getJSONObject("minutes");
+            JSONObject cleanMinutes = copyFields(minutes, "summary", "discussion_points", "open_questions");
+            JSONArray decisions = new JSONArray(), actions = new JSONArray();
+            JSONArray originalDecisions = minutes.getJSONArray("decisions");
+            for (int i = 0; i < originalDecisions.length(); i++) {
+                decisions.put(copyFields(originalDecisions.getJSONObject(i), "text", "segment_ids"));
+            }
+            JSONArray originalActions = minutes.getJSONArray("action_items");
+            for (int i = 0; i < originalActions.length(); i++) {
+                actions.put(copyFields(originalActions.getJSONObject(i), "task", "owner", "due_date", "segment_ids"));
+            }
+            cleanMinutes.put("decisions", decisions);
+            cleanMinutes.put("action_items", actions);
+            clean.put("minutes", cleanMinutes);
+            return clean;
+        } catch (Exception e) {
+            throw new Exception("ردّ خدمة المعالجة ناقص أو غير صالح. لم يُحفظ محضر فارغ؛ تحقق من إعداد الخدمة.");
+        }
+    }
+
+    private static HttpURLConnection open(String base, String endpoint, String token,
+                                           String method, int readTimeout) throws Exception {
+        checkCancelled();
+        HttpURLConnection connection = (HttpURLConnection) new URI(base + endpoint).toURL().openConnection();
+        connection.setInstanceFollowRedirects(false);
+        connection.setRequestMethod(method);
+        connection.setConnectTimeout(15_000);
+        connection.setReadTimeout(readTimeout);
+        connection.setUseCaches(false);
+        connection.setRequestProperty("Accept", "application/json");
+        if (!token.isEmpty()) connection.setRequestProperty("Authorization", "Bearer " + token);
+        return connection;
+    }
+
+    private static String validateToken(String accessToken) throws Exception {
+        String supplied = accessToken == null ? "" : accessToken;
+        if (supplied.matches("(?s).*[\\p{Cntrl}].*")) throw new Exception("رمز الوصول غير صالح.");
+        return supplied.trim();
+    }
+
+    private static boolean positiveInteger(Object value) {
+        if (!(value instanceof Number)) return false;
+        double number = ((Number) value).doubleValue();
+        return !Double.isNaN(number) && !Double.isInfinite(number) && number > 0 && number == Math.floor(number);
+    }
+
+    private static String readResponse(HttpURLConnection connection, String token) throws Exception {
+        checkCancelled();
+        int status = connection.getResponseCode();
+        if (status >= 300 && status < 400) {
+            throw new Exception("الخدمة أعادت توجيه الطلب. أدخل عنوان الخدمة النهائي مباشرةً لحماية رمز الوصول.");
+        }
+        String body;
+        InputStream stream = status >= 200 && status < 300 ? connection.getInputStream() : connection.getErrorStream();
+        try (InputStream input = stream) {
+            body = input == null ? "" : read(input, status >= 200 && status < 300 ? MAX_RESPONSE_BYTES : 16 * 1024);
+        }
+        if (status < 200 || status >= 300) {
+            throw new Exception(responseError(status, body, token));
+        }
+        return body;
+    }
+
+    private static void validateAudio(File file, long limit, String label, boolean reference) throws Exception {
         if (file == null || !file.isFile() || !file.canRead() || file.length() == 0) {
             throw new Exception(label + " غير موجود أو فارغ. سجّله مرة أخرى.");
         }
-        if (!file.getName().toLowerCase(Locale.ROOT).endsWith(".m4a")) {
-            throw new Exception(label + " يجب أن يكون بصيغة M4A.");
+        String extension = extension(file);
+        if (!(extension.equals("m4a") || (!reference && (extension.equals("mp3") || extension.equals("wav"))))) {
+            throw new Exception(label + (reference ? " يجب أن يكون بصيغة M4A." : " يجب أن يكون بصيغة M4A أو MP3 أو WAV."));
         }
         if (file.length() > limit) {
             throw new Exception(label + " يتجاوز الحد المسموح ("
@@ -183,13 +322,16 @@ public final class MeetingApi {
 
     private static void writeFile(OutputStream output, String boundary, String name,
                                   File file, long limit) throws IOException {
+        String extension = extension(file);
+        String mime = extension.equals("mp3") ? "audio/mpeg" : extension.equals("wav") ? "audio/wav" : "audio/mp4";
         write(output, "--" + boundary + "\r\nContent-Disposition: form-data; name=\"" + name
-                + "\"; filename=\"" + name + ".m4a\"\r\nContent-Type: audio/mp4\r\n\r\n");
+                + "\"; filename=\"" + name + "." + extension + "\"\r\nContent-Type: " + mime + "\r\n\r\n");
         try (InputStream input = new FileInputStream(file)) {
             byte[] buffer = new byte[16 * 1024];
             long total = 0;
             int count;
             while ((count = input.read(buffer)) != -1) {
+                checkCancelled();
                 total += count;
                 if (total > limit) throw new IOException("Audio size changed during upload");
                 output.write(buffer, 0, count);
@@ -199,7 +341,25 @@ public final class MeetingApi {
     }
 
     private static void write(OutputStream output, String text) throws IOException {
+        checkCancelled();
         output.write(text.getBytes(StandardCharsets.UTF_8));
+    }
+
+    private static String extension(File file) {
+        String name = file.getName().toLowerCase(Locale.ROOT);
+        int dot = name.lastIndexOf('.');
+        return dot < 0 ? "" : name.substring(dot + 1);
+    }
+
+    private static void writeBytes(OutputStream output, byte[] bytes) throws IOException {
+        for (int start = 0; start < bytes.length; start += 16 * 1024) {
+            checkCancelled();
+            output.write(bytes, start, Math.min(16 * 1024, bytes.length - start));
+        }
+    }
+
+    private static void checkCancelled() throws InterruptedIOException {
+        if (Thread.currentThread().isInterrupted()) throw new InterruptedIOException("Request cancelled");
     }
 
     private static String read(InputStream input, int limit) throws IOException {
@@ -207,13 +367,14 @@ public final class MeetingApi {
         byte[] buffer = new byte[8192];
         int count;
         while ((count = input.read(buffer)) != -1) {
+            checkCancelled();
             if (bytes.size() + count > limit) throw new IOException("Response exceeded limit");
             bytes.write(buffer, 0, count);
         }
         return new String(bytes.toByteArray(), StandardCharsets.UTF_8);
     }
 
-    private static String responseError(int status, String body) {
+    private static String responseError(int status, String body, String token) {
         String detail = "";
         try {
             JSONObject error = new JSONObject(body);
@@ -225,6 +386,7 @@ public final class MeetingApi {
                 detail = value.toString();
             }
         } catch (Exception ignored) { }
+        if (!token.isEmpty()) detail = detail.replace(token, "[رمز محجوب]");
         detail = detail.replaceAll("[\\p{Cntrl}]", " ").trim();
         if (detail.length() > 500) detail = detail.substring(0, 500) + "…";
         if (detail.isEmpty()) {

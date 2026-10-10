@@ -109,6 +109,47 @@ public final class MeetingStore {
         return result;
     }
 
+    /** Searches app-private meetings without uploading any query or transcript. */
+    public synchronized JSONArray searchMeetings(String query) {
+        JSONArray all = meetings();
+        JSONArray matches = new JSONArray();
+        for (int i = 0; i < all.length(); i++) {
+            JSONObject meeting = all.optJSONObject(i);
+            if (meeting != null && matchesQuery(meeting, query)) matches.put(meeting);
+        }
+        return matches;
+    }
+
+    static boolean matchesQuery(JSONObject meeting, String query) {
+        String normalized = normalizeSearch(query);
+        if (normalized.isEmpty()) return true;
+        StringBuilder words = new StringBuilder(meeting.optString("title", ""));
+        JSONObject minutes = meeting.optJSONObject("minutes");
+        if (minutes != null) words.append(' ').append(minutes.optString("summary", ""));
+        JSONArray segments = meeting.optJSONArray("segments");
+        if (segments != null) for (int i = 0; i < segments.length(); i++) {
+            JSONObject segment = segments.optJSONObject(i);
+            if (segment != null) words.append(' ').append(segment.optString("text", ""));
+        }
+        JSONArray speakers = meeting.optJSONArray("speakers");
+        if (speakers != null) for (int i = 0; i < speakers.length(); i++) {
+            JSONObject speaker = speakers.optJSONObject(i);
+            if (speaker != null) words.append(' ').append(speaker.optString("name", ""));
+        }
+        String searchable = normalizeSearch(words.toString());
+        for (String word : normalized.split("\\s+")) if (!searchable.contains(word)) return false;
+        return true;
+    }
+
+    /** Arabic spelling normalization is only for search; stored text remains unchanged. */
+    public static String normalizeSearch(String text) {
+        if (text == null) return "";
+        return text.toLowerCase(Locale.ROOT)
+                .replaceAll("[\\u0610-\\u061A\\u064B-\\u065F\\u0670\\u06D6-\\u06ED\\u0640]", "")
+                .replaceAll("[\\u0622\\u0623\\u0625\\u0671]", "ا")
+                .replace('\u0649', '\u064a').trim();
+    }
+
     public synchronized void deleteMeeting(JSONObject meeting) {
         try {
             String id = meeting == null ? "" : meeting.optString("_id", "");
@@ -138,6 +179,7 @@ public final class MeetingStore {
         }
         StringBuilder text = new StringBuilder();
         if (meeting.optBoolean("_demo", false)) text.append("مثال تجريبي — هذا المحضر ليس ناتجًا عن تسجيل حقيقي.\n\n");
+        if (meeting.optBoolean("_minutes_stale", false)) text.append("النص عُدّل، والمحضر لم يُحدَّث بعد؛ أعد التلخيص قبل الاعتماد.\n\n");
         text.append("محضر اجتماع: ").append(meeting.optString("title", "اجتماع")).append('\n');
         long savedAt = meeting.optLong("_saved_at", 0);
         if (savedAt > 0) {
@@ -178,7 +220,8 @@ public final class MeetingStore {
                     JSONObject action = actions.optJSONObject(i);
                     if (action == null) continue;
                     String owner = nullableText(action, "owner", "غير محدد");
-                    text.append("• ").append(action.optString("task"))
+                    text.append(action.optBoolean("completed", false) ? "☑ " : "☐ ").append(action.optString("task"))
+                            .append(action.optBoolean("completed", false) ? " (مكتملة)" : " (قيد المتابعة)")
                             .append(" — المسؤول: ").append(names.containsKey(owner) ? names.get(owner) : owner)
                             .append("؛ الموعد: ").append(nullableText(action, "due_date", "غير محدد"));
                     appendCitations(text, action.optJSONArray("segment_ids"));

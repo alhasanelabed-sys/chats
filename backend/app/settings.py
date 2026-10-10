@@ -11,6 +11,8 @@ class Settings:
     max_reference_bytes: int = 1_000_000
     max_request_bytes: int = 28_100_000
     max_duration_seconds: int = 3600
+    max_summary_request_bytes: int = 2_000_000
+    normalization_timeout_seconds: float = 180.0
     provider_timeout_seconds: float = 600.0
 
     @classmethod

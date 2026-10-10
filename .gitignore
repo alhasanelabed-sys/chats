@@ -7,6 +7,7 @@ android/**/build/
 tools/
 dist/*.apk
 dist/*.apk.idsig
+dist/android-smoke/
 
 # Service configuration, caches, and uploaded meeting audio
 .env

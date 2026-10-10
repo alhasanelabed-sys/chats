@@ -25,6 +25,8 @@ import java.util.Locale;
 public final class RecordingService extends Service {
     public static final String ACTION_START = "com.majlis.app.START";
     public static final String ACTION_STOP = "com.majlis.app.STOP";
+    public static final String ACTION_PAUSE = "com.majlis.app.PAUSE";
+    public static final String ACTION_RESUME = "com.majlis.app.RESUME";
     public static final String ACTION_UPDATE = "com.majlis.app.RECORDING_UPDATE";
     public static final String EXTRA_PATH = "path";
     public static final String EXTRA_STATE = "state";
@@ -32,15 +34,13 @@ public final class RecordingService extends Service {
     public static final String EXTRA_AMPLITUDE = "amplitude";
     public static final String EXTRA_ERROR = "error";
 
-    public static final int MAX_DURATION_MS = 20 * 60 * 1000;
+    public static final int MAX_DURATION_MS = 60 * 60 * 1000;
     private static final String CHANNEL_ID = "meeting_recording";
     private static final int NOTIFICATION_ID = 2101;
     private static final long LEVEL_INTERVAL_MS = 500L;
 
-    private static volatile boolean recording;
+    private static final RecordingClock clock = new RecordingClock();
     private static volatile String selectedPath = "";
-    private static volatile long startedElapsedMs;
-    private static volatile long completedElapsedMs;
 
     private final Handler handler = new Handler(Looper.getMainLooper());
     private MediaRecorder recorder;
@@ -49,7 +49,11 @@ public final class RecordingService extends Service {
     private boolean foreground;
 
     public static boolean isRecording() {
-        return recording;
+        return clock.isRecording();
+    }
+
+    public static boolean isPaused() {
+        return clock.isPaused();
     }
 
     public static String currentPath() {
@@ -57,20 +61,21 @@ public final class RecordingService extends Service {
     }
 
     public static long elapsedMillis() {
-        return recording
-                ? Math.max(0L, SystemClock.elapsedRealtime() - startedElapsedMs)
-                : completedElapsedMs;
+        return clock.elapsedMillis(SystemClock.elapsedRealtime());
     }
 
     private final Runnable levels = new Runnable() {
         @Override public void run() {
-            if (!recording || recorder == null) return;
+            if (!isRecording() || recorder == null) return;
             if (elapsedMillis() >= MAX_DURATION_MS) {
                 finishRecording(true);
                 return;
             }
             try {
-                sendUpdate("recording", recorder.getMaxAmplitude(), null, false);
+                // Keep the UI timer frozen and never sample a paused microphone.
+                boolean paused = isPaused();
+                sendUpdate(paused ? "paused" : "recording",
+                        paused ? 0 : recorder.getMaxAmplitude(), null, false);
                 handler.postDelayed(this, LEVEL_INTERVAL_MS);
             } catch (RuntimeException exception) {
                 failRecording("تعذر متابعة التسجيل. قد يكون الميكروفون غير متاح؛ أعد المحاولة.");
@@ -82,7 +87,7 @@ public final class RecordingService extends Service {
         super.onCreate();
         NotificationChannel channel = new NotificationChannel(
                 CHANNEL_ID, "تسجيل الاجتماع", NotificationManager.IMPORTANCE_LOW);
-        channel.setDescription("إشعار ظاهر ما دام ميكروفون الاجتماع يعمل");
+        channel.setDescription("إشعار ظاهر طوال جلسة التسجيل، مع أزرار الإيقاف والاستئناف");
         channel.setSound(null, null);
         channel.enableVibration(false);
         NotificationManager manager = getSystemService(NotificationManager.class);
@@ -92,16 +97,22 @@ public final class RecordingService extends Service {
     @Override public int onStartCommand(Intent intent, int flags, int startId) {
         String action = intent == null ? null : intent.getAction();
         if (ACTION_START.equals(action)) {
-            if (recording) {
+            if (isRecording()) {
                 // An accidental second tap must not replace or interrupt the active file.
-                sendUpdate("recording", 0, null, false);
+                sendUpdate(isPaused() ? "paused" : "recording", 0, null, false);
             } else {
                 startRecording(intent.getStringExtra(EXTRA_PATH));
             }
         } else if (ACTION_STOP.equals(action)) {
-            if (recording) finishRecording(false);
+            if (isRecording()) finishRecording(false);
             else stopSelf();
-        } else if (!recording) {
+        } else if (ACTION_PAUSE.equals(action)) {
+            if (isRecording()) pauseRecording();
+            else stopSelf();
+        } else if (ACTION_RESUME.equals(action)) {
+            if (isRecording()) resumeRecording();
+            else stopSelf();
+        } else if (!isRecording()) {
             stopSelf();
         }
         // Never restart the microphone after process death without a new explicit start.
@@ -110,8 +121,7 @@ public final class RecordingService extends Service {
 
     private void startRecording(String requestedPath) {
         selectedPath = "";
-        completedElapsedMs = 0L;
-        startedElapsedMs = 0L;
+        clock.reset();
         if (checkSelfPermission(Manifest.permission.RECORD_AUDIO)
                 != PackageManager.PERMISSION_GRANTED) {
             failRecording("اسمح باستخدام الميكروفون من إعدادات التطبيق قبل بدء التسجيل.");
@@ -130,13 +140,7 @@ public final class RecordingService extends Service {
             }
             foreground = true;
 
-            PowerManager power = getSystemService(PowerManager.class);
-            if (power != null) {
-                wakeLock = power.newWakeLock(PowerManager.PARTIAL_WAKE_LOCK,
-                        "Majlis:MeetingRecording");
-                wakeLock.setReferenceCounted(false);
-                wakeLock.acquire(MAX_DURATION_MS + 30_000L);
-            }
+            acquireWakeLock();
 
             recorder = Build.VERSION.SDK_INT >= Build.VERSION_CODES.S
                     ? new MediaRecorder(this) : new MediaRecorder();
@@ -144,8 +148,9 @@ public final class RecordingService extends Service {
             recorder.setOutputFormat(MediaRecorder.OutputFormat.MPEG_4);
             recorder.setAudioEncoder(MediaRecorder.AudioEncoder.AAC);
             recorder.setAudioChannels(1);
-            recorder.setAudioSamplingRate(44_100);
-            recorder.setAudioEncodingBitRate(128_000);
+            // One hour of mono AAC at 48 kbps is about 21.6 MB before container overhead.
+            recorder.setAudioSamplingRate(32_000);
+            recorder.setAudioEncodingBitRate(48_000);
             recorder.setMaxDuration(MAX_DURATION_MS);
             recorder.setOutputFile(selectedPath);
             recorder.setOnErrorListener((source, what, extra) -> {
@@ -154,17 +159,16 @@ public final class RecordingService extends Service {
                 }
             });
             recorder.setOnInfoListener((source, what, extra) -> {
-                if (source == recorder && recording
+                if (source == recorder && isRecording()
                         && what == MediaRecorder.MEDIA_RECORDER_INFO_MAX_DURATION_REACHED) {
                     finishRecording(true);
                 }
             });
             recorder.prepare();
             recorder.start();
+            clock.start(SystemClock.elapsedRealtime());
             getSharedPreferences("majlis", MODE_PRIVATE).edit()
                     .putBoolean("recording_incomplete", true).commit();
-            startedElapsedMs = SystemClock.elapsedRealtime();
-            recording = true;
             sendUpdate("recording", 0, null, false);
             handler.postDelayed(levels, LEVEL_INTERVAL_MS);
         } catch (SecurityException exception) {
@@ -175,6 +179,47 @@ public final class RecordingService extends Service {
             failRecording("مسار التسجيل غير صالح. يجب حفظ ملف جديد بصيغة m4a داخل تسجيلات التطبيق.");
         } catch (RuntimeException exception) {
             failRecording("تعذر بدء التسجيل. قد يكون الميكروفون مستخدمًا أو غير متاح.");
+        }
+    }
+
+    private void pauseRecording() {
+        if (!isRecording() || isPaused() || recorder == null) return;
+        if (elapsedMillis() >= MAX_DURATION_MS) {
+            finishRecording(true);
+            return;
+        }
+        try {
+            recorder.pause();
+            clock.pause(SystemClock.elapsedRealtime());
+            releaseWakeLock();
+            refreshNotification();
+            sendUpdate("paused", 0, null, false);
+        } catch (RuntimeException exception) {
+            failRecording("تعذر إيقاف التسجيل مؤقتًا. تحقق من الميكروفون وأعد المحاولة.");
+        }
+    }
+
+    private void resumeRecording() {
+        if (!isRecording() || !isPaused() || recorder == null) return;
+        if (elapsedMillis() >= MAX_DURATION_MS) {
+            finishRecording(true);
+            return;
+        }
+        try {
+            acquireWakeLock();
+            recorder.resume();
+            clock.resume(SystemClock.elapsedRealtime());
+            refreshNotification();
+            sendUpdate("recording", 0, null, false);
+        } catch (RuntimeException exception) {
+            failRecording("تعذر استئناف التسجيل. تحقق من الميكروفون وأعد المحاولة.");
+        }
+    }
+
+    private void refreshNotification() {
+        NotificationManager manager = getSystemService(NotificationManager.class);
+        if (foreground && manager != null) {
+            manager.notify(NOTIFICATION_ID, recordingNotification());
         }
     }
 
@@ -216,18 +261,27 @@ public final class RecordingService extends Service {
         Intent stop = new Intent(this, RecordingService.class).setAction(ACTION_STOP);
         PendingIntent stopRecording = PendingIntent.getService(this, 2102, stop,
                 PendingIntent.FLAG_UPDATE_CURRENT | PendingIntent.FLAG_IMMUTABLE);
+        boolean paused = isPaused();
+        Intent toggle = new Intent(this, RecordingService.class)
+                .setAction(paused ? ACTION_RESUME : ACTION_PAUSE);
+        PendingIntent toggleRecording = PendingIntent.getService(this,
+                paused ? 2104 : 2103, toggle,
+                PendingIntent.FLAG_UPDATE_CURRENT | PendingIntent.FLAG_IMMUTABLE);
         Notification.Builder builder = new Notification.Builder(this, CHANNEL_ID)
                 .setSmallIcon(R.drawable.ic_mic)
-                .setContentTitle("مجلس — التسجيل جارٍ")
-                .setContentText("الميكروفون نشط · اضغط للعودة إلى الاجتماع")
+                .setContentTitle(paused ? "مجلس — التسجيل متوقف مؤقتًا" : "مجلس — التسجيل جارٍ")
+                .setContentText(paused ? "التسجيل متوقف مؤقتًا · تابع لإكمال الاجتماع"
+                        : "الميكروفون نشط · اضغط للعودة إلى الاجتماع")
                 .setContentIntent(openApp)
                 .setOngoing(true)
                 .setOnlyAlertOnce(true)
                 .setCategory(Notification.CATEGORY_SERVICE)
                 .setVisibility(Notification.VISIBILITY_PRIVATE)
-                .setWhen(System.currentTimeMillis())
-                .setShowWhen(true)
-                .setUsesChronometer(true)
+                .setWhen(System.currentTimeMillis() - elapsedMillis())
+                .setShowWhen(!paused)
+                .setUsesChronometer(!paused)
+                .addAction(new Notification.Action.Builder(R.drawable.ic_mic,
+                        paused ? "متابعة التسجيل" : "إيقاف مؤقت", toggleRecording).build())
                 .addAction(new Notification.Action.Builder(R.drawable.ic_mic,
                         "إنهاء التسجيل", stopRecording).build());
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.S) {
@@ -237,10 +291,9 @@ public final class RecordingService extends Service {
     }
 
     private void finishRecording(boolean durationLimit) {
-        if (!recording || recorder == null) return;
+        if (!isRecording() || recorder == null) return;
         handler.removeCallbacks(levels);
-        completedElapsedMs = elapsedMillis();
-        recording = false;
+        clock.stop(SystemClock.elapsedRealtime());
         boolean stopped = false;
         try {
             recorder.setOnErrorListener(null);
@@ -274,9 +327,8 @@ public final class RecordingService extends Service {
         getSharedPreferences("majlis", MODE_PRIVATE).edit()
                 .putBoolean("recording_incomplete", false).remove("last_audio").commit();
         handler.removeCallbacks(levels);
-        boolean wasRecording = recording;
-        completedElapsedMs = elapsedMillis();
-        recording = false;
+        boolean wasRecording = isRecording();
+        clock.stop(SystemClock.elapsedRealtime());
         if (recorder != null) {
             try {
                 recorder.setOnErrorListener(null);
@@ -292,6 +344,19 @@ public final class RecordingService extends Service {
         sendUpdate("error", 0, message, false);
         leaveForeground();
         stopSelf();
+    }
+
+    private void acquireWakeLock() {
+        releaseWakeLock();
+        PowerManager power = getSystemService(PowerManager.class);
+        if (power != null) {
+            wakeLock = power.newWakeLock(PowerManager.PARTIAL_WAKE_LOCK,
+                    "Majlis:MeetingRecording");
+            wakeLock.setReferenceCounted(false);
+            // A long pause never holds the CPU awake. A resume acquires only time remaining.
+            long remainingMillis = Math.max(1L, MAX_DURATION_MS - elapsedMillis());
+            wakeLock.acquire(remainingMillis + 30_000L);
+        }
     }
 
     private void releaseRecorder() {
@@ -340,7 +405,7 @@ public final class RecordingService extends Service {
         if (error != null) update.putExtra(EXTRA_ERROR, error);
         if (durationLimit) {
             update.putExtra("reason", "duration_limit");
-            update.putExtra("message", "اكتمل التسجيل عند الحد الأقصى: ٢٠ دقيقة.");
+            update.putExtra("message", "اكتمل التسجيل عند الحد الأقصى: ٦٠ دقيقة من الصوت.");
         }
         sendBroadcast(update);
     }
@@ -352,7 +417,7 @@ public final class RecordingService extends Service {
     }
 
     @Override public void onDestroy() {
-        if (recording) finishRecording(false);
+        if (isRecording()) finishRecording(false);
         handler.removeCallbacks(levels);
         releaseRecorder();
         releaseWakeLock();

@@ -21,6 +21,22 @@ for required_command in "$JAVA_COMMAND" "$KEYTOOL_COMMAND" python3 zip find; do
     fi
 done
 
+# Keep the installable APK's metadata aligned with the Gradle build.
+version_metadata="$(python3 - "$ROOT_DIR/android/app/build.gradle" <<'PY'
+import re
+import sys
+from pathlib import Path
+
+gradle = Path(sys.argv[1]).read_text(encoding="utf-8")
+code = re.findall(r"^\s*versionCode\s+(\d+)\s*$", gradle, re.MULTILINE)
+name = re.findall(r"^\s*versionName\s+'([A-Za-z0-9._-]+)'\s*$", gradle, re.MULTILINE)
+if len(code) != 1 or len(name) != 1 or int(code[0]) < 1:
+    raise SystemExit("Expected one positive versionCode and one versionName in app/build.gradle")
+print(code[0], name[0])
+PY
+)"
+read -r VERSION_CODE VERSION_NAME <<< "$version_metadata"
+
 mkdir -p "$ROOT_DIR/android/app/build" "$ROOT_DIR/dist" "$ROOT_DIR/tools"
 BUILD_DIR="$(mktemp -d "$ROOT_DIR/android/app/build/manual.XXXXXXXX")"
 trap 'rm -rf -- "$BUILD_DIR"' EXIT
@@ -50,7 +66,7 @@ PY
     --manifest "$BUILD_DIR/AndroidManifest.xml" \
     --java "$BUILD_DIR/generated" \
     --min-sdk-version 26 --target-sdk-version 35 \
-    --version-code 1 --version-name 0.1 \
+    --version-code "$VERSION_CODE" --version-name "$VERSION_NAME" \
     "$BUILD_DIR/resources.zip"
 
 java_sources=()
@@ -95,4 +111,28 @@ fi
     --ks-pass pass:android --key-pass pass:android \
     --out "$APK_PATH" "$BUILD_DIR/aligned.apk"
 "$BUILD_TOOLS_DIR/apksigner" verify --verbose "$APK_PATH"
+"$BUILD_TOOLS_DIR/aapt2" dump badging "$APK_PATH" > "$BUILD_DIR/apk-metadata.txt"
+python3 - "$APK_PATH" "$BUILD_DIR/apk-metadata.txt" "$VERSION_CODE" "$VERSION_NAME" <<'PY'
+import sys
+import zipfile
+from pathlib import Path
+
+apk, metadata_file, version_code, version_name = sys.argv[1:]
+metadata = Path(metadata_file).read_text(encoding="utf-8")
+required = (
+    "package: name='com.majlis.app'",
+    f"versionCode='{version_code}'",
+    f"versionName='{version_name}'",
+    "sdkVersion:'26'",
+    "targetSdkVersion:'35'",
+)
+for expected in required:
+    if expected not in metadata:
+        raise SystemExit(f"APK metadata mismatch: {expected}")
+with zipfile.ZipFile(apk) as archive:
+    for required_file in ("AndroidManifest.xml", "classes.dex", "resources.arsc"):
+        if required_file not in archive.namelist():
+            raise SystemExit(f"APK is missing {required_file}")
+print(f"Verified APK package, version {version_name} ({version_code}), SDK levels, and required files")
+PY
 printf '\nBuilt and signature-verified: %s\n' "$APK_PATH"
