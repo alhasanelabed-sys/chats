@@ -1,0 +1,42 @@
+{
+  "version": 1,
+  "notice_ar": "بيانات اصطناعية مرجعية وليست نتيجة تعرف آلي أو قياس لهوية حقيقية أو مسافة أو ميكروفون. مستويات القرب والبعد تعني تخفيفًا رقميًا فقط.",
+  "fixtures": [
+    {
+      "id": "six-speakers-distance",
+      "title": "مثال اصطناعي: ستة متحدثين وقرب رقمي مختلف",
+      "description_ar": "ستة أصوات مرجعية مع دخول متأخر وعودة الأسماء نفسها وتخفيف رقمي من ٣ إلى ٢٤ ديسيبل.",
+      "asset": "meetings/six-speakers-distance.json",
+      "kind": "synthetic_reference",
+      "speaker_count": 6,
+      "segment_count": 13
+    },
+    {
+      "id": "multilingual-eight",
+      "title": "مثال اصطناعي: ثماني لغات مع عودة متحدثين",
+      "description_ar": "نصوص مرجعية بالعبرية والروسية واليونانية والأوكرانية والصينية والفارسية والأردية والعربية، وليست إثباتًا لجودة صوت هذه اللغات.",
+      "asset": "meetings/multilingual-eight.json",
+      "kind": "synthetic_reference",
+      "speaker_count": 8,
+      "segment_count": 11
+    },
+    {
+      "id": "unknown-and-ciphers",
+      "title": "مثال اصطناعي: غير مفهوم وترميز معلوم ومجهول",
+      "description_ar": "أمثلة Base64 وHex وROT13 وقيصر بمراجع فك واضحة، وسلسلة مجهولة بلا تخمين.",
+      "asset": "meetings/unknown-and-ciphers.json",
+      "kind": "synthetic_reference",
+      "speaker_count": 6,
+      "segment_count": 9
+    },
+    {
+      "id": "noise-returning-speakers",
+      "title": "مثال اصطناعي: ضجيج وعودة متحدثين",
+      "description_ar": "الضجيج الأبيض والوردي ومزيج كلام اصطناعي والنبضات بمستويات رقمية معلومة؛ الدخول المتأخر والعودة محفوظان في المرجع.",
+      "asset": "meetings/noise-returning-speakers.json",
+      "kind": "synthetic_reference",
+      "speaker_count": 6,
+      "segment_count": 11
+    }
+  ]
+}

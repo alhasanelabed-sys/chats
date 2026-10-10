@@ -1,0 +1,1400 @@
+{
+  "version": 1,
+  "mode": "speech",
+  "seed": 20261010,
+  "sample_rate": 16000,
+  "notice_ar": "بيانات اصطناعية مرجعية وليست نتيجة تعرف آلي أو قياس لهوية حقيقية أو مسافة أو ميكروفون. مستويات القرب والبعد تعني تخفيفًا رقميًا فقط.",
+  "speech_content_present": true,
+  "recognition_run": false,
+  "real_distance_measured": false,
+  "identity_source": "generator_truth_labels",
+  "tts_engine": "espeak-ng",
+  "tts_version": "eSpeak NG text-to-speech: 1.51  Data at: /usr/lib/x86_64-linux-gnu/espeak-ng-data",
+  "available_voice_languages": [
+    "af",
+    "am",
+    "an",
+    "ar",
+    "as",
+    "az",
+    "ba",
+    "be",
+    "bg",
+    "bn",
+    "bpy",
+    "bs",
+    "ca",
+    "chr-US-Qaaa-x-west",
+    "cmn",
+    "cmn-latn-pinyin",
+    "cs",
+    "cv",
+    "cy",
+    "da",
+    "de",
+    "el",
+    "en-029",
+    "en-gb",
+    "en-gb-scotland",
+    "en-gb-x-gbclan",
+    "en-gb-x-gbcwmd",
+    "en-gb-x-rp",
+    "en-us",
+    "en-us-nyc",
+    "eo",
+    "es",
+    "es-419",
+    "et",
+    "eu",
+    "fa",
+    "fa-latn",
+    "fi",
+    "fr-be",
+    "fr-ch",
+    "fr-fr",
+    "ga",
+    "gd",
+    "gn",
+    "grc",
+    "gu",
+    "hak",
+    "haw",
+    "he",
+    "hi",
+    "hr",
+    "ht",
+    "hu",
+    "hy",
+    "hyw",
+    "ia",
+    "id",
+    "io",
+    "is",
+    "it",
+    "ja",
+    "jbo",
+    "ka",
+    "kk",
+    "kl",
+    "kn",
+    "ko",
+    "kok",
+    "ku",
+    "ky",
+    "la",
+    "lb",
+    "lfn",
+    "lt",
+    "ltg",
+    "lv",
+    "mi",
+    "mk",
+    "ml",
+    "mr",
+    "ms",
+    "mt",
+    "my",
+    "nb",
+    "nci",
+    "ne",
+    "nl",
+    "nog",
+    "om",
+    "or",
+    "pa",
+    "pap",
+    "piqd",
+    "pl",
+    "pt",
+    "pt-br",
+    "py",
+    "qdb",
+    "qu",
+    "quc",
+    "qya",
+    "ro",
+    "ru",
+    "ru-lv",
+    "sd",
+    "shn",
+    "si",
+    "sjn",
+    "sk",
+    "sl",
+    "smj",
+    "sq",
+    "sr",
+    "sv",
+    "sw",
+    "ta",
+    "te",
+    "th",
+    "tk",
+    "tn",
+    "tr",
+    "tt",
+    "ug",
+    "uk",
+    "ur",
+    "uz",
+    "vi",
+    "vi-vn-x-central",
+    "vi-vn-x-south",
+    "yue"
+  ],
+  "cases": [
+    {
+      "id": "recurring_six",
+      "selected_language": "ar",
+      "duration_seconds": 144,
+      "timeline": [
+        {
+          "id": "s01",
+          "speaker_id": "synth_01",
+          "start": 0.0,
+          "end": 7.2005,
+          "text": "نبدأ اجتماع مراجعة النسخة التجريبية. نحتاج إلى خطة اختبار واضحة.",
+          "language": "ar",
+          "requested_language": "ar",
+          "speech_gain_db": -3,
+          "voice": "ar+m1",
+          "tempo_factor": 1,
+          "clean_clip_metrics": {
+            "rms_dbfs": -24.413966,
+            "peak_dbfs": -6.0,
+            "clipped_samples": 0
+          }
+        },
+        {
+          "id": "s02",
+          "speaker_id": "synth_02",
+          "start": 11.0,
+          "end": 15.102688,
+          "text": "سأراجع شاشة التسجيل وأرسل ملاحظاتي غدًا.",
+          "language": "ar",
+          "requested_language": "ar",
+          "speech_gain_db": -9,
+          "voice": "ar+f2",
+          "tempo_factor": 1,
+          "clean_clip_metrics": {
+            "rms_dbfs": -21.626115,
+            "peak_dbfs": -6.0,
+            "clipped_samples": 0
+          }
+        },
+        {
+          "id": "s03",
+          "speaker_id": "synth_03",
+          "start": 22.0,
+          "end": 27.049625,
+          "text": "اختبرت حفظ المحضر، ويحتاج البحث إلى تحسين.",
+          "language": "ar",
+          "requested_language": "ar",
+          "speech_gain_db": -18,
+          "voice": "ar+m3",
+          "tempo_factor": 1,
+          "clean_clip_metrics": {
+            "rms_dbfs": -24.389482,
+            "peak_dbfs": -6.0,
+            "clipped_samples": 0
+          }
+        },
+        {
+          "id": "s04",
+          "speaker_id": "synth_01",
+          "start": 33.0,
+          "end": 37.123125,
+          "text": "نراجع الملاحظات قبل أن نقرر إطلاق النسخة.",
+          "language": "ar",
+          "requested_language": "ar",
+          "speech_gain_db": -3,
+          "voice": "ar+m1",
+          "tempo_factor": 1,
+          "clean_clip_metrics": {
+            "rms_dbfs": -24.173098,
+            "peak_dbfs": -6.0,
+            "clipped_samples": 0
+          }
+        },
+        {
+          "id": "s05",
+          "speaker_id": "synth_04",
+          "start": 44.0,
+          "end": 48.895,
+          "text": "انضممت الآن. سأفحص استيراد الملفات يوم الخميس.",
+          "language": "ar",
+          "requested_language": "ar",
+          "speech_gain_db": -24,
+          "voice": "ar+f3",
+          "tempo_factor": 1,
+          "clean_clip_metrics": {
+            "rms_dbfs": -20.887834,
+            "peak_dbfs": -6.0,
+            "clipped_samples": 0
+          }
+        },
+        {
+          "id": "s06",
+          "speaker_id": "synth_02",
+          "start": 55.0,
+          "end": 61.519063,
+          "text": "عدت إلى النقاش. سأضيف اختبار العودة بعد إيقاف التسجيل مؤقتًا.",
+          "language": "ar",
+          "requested_language": "ar",
+          "speech_gain_db": -9,
+          "voice": "ar+f2",
+          "tempo_factor": 1,
+          "clean_clip_metrics": {
+            "rms_dbfs": -21.967431,
+            "peak_dbfs": -6.0,
+            "clipped_samples": 0
+          }
+        },
+        {
+          "id": "s07",
+          "speaker_id": "synth_05",
+          "start": 66.0,
+          "end": 73.136375,
+          "text": "انضممت بعد البداية. واجهة الترجمة تحتاج إلى مراجعة النص الطويل.",
+          "language": "ar",
+          "requested_language": "ar",
+          "speech_gain_db": -6,
+          "voice": "ar+m2",
+          "tempo_factor": 1,
+          "clean_clip_metrics": {
+            "rms_dbfs": -24.28224,
+            "peak_dbfs": -6.0,
+            "clipped_samples": 0
+          }
+        },
+        {
+          "id": "s08",
+          "speaker_id": "synth_03",
+          "start": 77.0,
+          "end": 81.77425,
+          "text": "عدت. سأراجع البحث دون تحديد موعد تسليم.",
+          "language": "ar",
+          "requested_language": "ar",
+          "speech_gain_db": -18,
+          "voice": "ar+m3",
+          "tempo_factor": 1,
+          "clean_clip_metrics": {
+            "rms_dbfs": -25.012706,
+            "peak_dbfs": -6.0,
+            "clipped_samples": 0
+          }
+        },
+        {
+          "id": "s09",
+          "speaker_id": "synth_01",
+          "start": 88.0,
+          "end": 93.741625,
+          "text": "اتفقنا على تأجيل الإطلاق حتى مراجعة تقارير الاختبار.",
+          "language": "ar",
+          "requested_language": "ar",
+          "speech_gain_db": -3,
+          "voice": "ar+m1",
+          "tempo_factor": 1,
+          "clean_clip_metrics": {
+            "rms_dbfs": -23.928551,
+            "peak_dbfs": -6.0,
+            "clipped_samples": 0
+          }
+        },
+        {
+          "id": "s10",
+          "speaker_id": "synth_06",
+          "start": 99.0,
+          "end": 104.446187,
+          "text": "انضممت متأخرًا. سأراجع تنسيق ملف PDF غدًا.",
+          "language": "ar",
+          "requested_language": "ar",
+          "speech_gain_db": -21,
+          "voice": "ar+f4",
+          "tempo_factor": 1,
+          "clean_clip_metrics": {
+            "rms_dbfs": -21.293489,
+            "peak_dbfs": -6.0,
+            "clipped_samples": 0
+          }
+        },
+        {
+          "id": "s11",
+          "speaker_id": "synth_04",
+          "start": 110.0,
+          "end": 114.393937,
+          "text": "عدت. أؤكد أن موعد تقرير الاستيراد يوم الخميس.",
+          "language": "ar",
+          "requested_language": "ar",
+          "speech_gain_db": -24,
+          "voice": "ar+f3",
+          "tempo_factor": 1,
+          "clean_clip_metrics": {
+            "rms_dbfs": -21.098808,
+            "peak_dbfs": -6.0,
+            "clipped_samples": 0
+          }
+        },
+        {
+          "id": "s12",
+          "speaker_id": "synth_06",
+          "start": 121.0,
+          "end": 127.61475,
+          "text": "عدت مرة ثانية، وسأضمّن أسماء المتحدثين في مراجعة PDF.",
+          "language": "ar",
+          "requested_language": "ar",
+          "speech_gain_db": -21,
+          "voice": "ar+f4",
+          "tempo_factor": 1,
+          "clean_clip_metrics": {
+            "rms_dbfs": -20.174774,
+            "peak_dbfs": -6.0,
+            "clipped_samples": 0
+          }
+        },
+        {
+          "id": "s13",
+          "speaker_id": "synth_05",
+          "start": 132.0,
+          "end": 136.69425,
+          "text": "عدت. كم لغة سنختبر في الجولة التالية؟",
+          "language": "ar",
+          "requested_language": "ar",
+          "speech_gain_db": -6,
+          "voice": "ar+m2",
+          "tempo_factor": 1,
+          "clean_clip_metrics": {
+            "rms_dbfs": -25.396704,
+            "peak_dbfs": -6.0,
+            "clipped_samples": 0
+          }
+        }
+      ],
+      "skipped_events": [],
+      "requested_languages": [
+        "ar"
+      ],
+      "generated_languages": [
+        "ar"
+      ],
+      "expected_speaker_count": 6,
+      "reference_meeting": "recurring_six-reference.json",
+      "speaker_references": [
+        {
+          "speaker_id": "synth_01",
+          "source_event_id": "s01",
+          "duration_seconds": 7.2005,
+          "speech_duration_seconds": 7.2005,
+          "silence_padding_seconds": 0.0,
+          "files": [
+            "references/recurring_six-synth_01.m4a"
+          ],
+          "identity_is_generator_truth": true
+        },
+        {
+          "speaker_id": "synth_02",
+          "source_event_id": "s02",
+          "duration_seconds": 4.1026875,
+          "speech_duration_seconds": 4.1026875,
+          "silence_padding_seconds": 0.0,
+          "files": [
+            "references/recurring_six-synth_02.m4a"
+          ],
+          "identity_is_generator_truth": true
+        },
+        {
+          "speaker_id": "synth_03",
+          "source_event_id": "s03",
+          "duration_seconds": 5.049625,
+          "speech_duration_seconds": 5.049625,
+          "silence_padding_seconds": 0.0,
+          "files": [
+            "references/recurring_six-synth_03.m4a"
+          ],
+          "identity_is_generator_truth": true
+        },
+        {
+          "speaker_id": "synth_04",
+          "source_event_id": "s05",
+          "duration_seconds": 4.895,
+          "speech_duration_seconds": 4.895,
+          "silence_padding_seconds": 0.0,
+          "files": [
+            "references/recurring_six-synth_04.m4a"
+          ],
+          "identity_is_generator_truth": true
+        },
+        {
+          "speaker_id": "synth_05",
+          "source_event_id": "s07",
+          "duration_seconds": 7.136375,
+          "speech_duration_seconds": 7.136375,
+          "silence_padding_seconds": 0.0,
+          "files": [
+            "references/recurring_six-synth_05.m4a"
+          ],
+          "identity_is_generator_truth": true
+        },
+        {
+          "speaker_id": "synth_06",
+          "source_event_id": "s10",
+          "duration_seconds": 5.4461875,
+          "speech_duration_seconds": 5.4461875,
+          "silence_padding_seconds": 0.0,
+          "files": [
+            "references/recurring_six-synth_06.m4a"
+          ],
+          "identity_is_generator_truth": true
+        }
+      ],
+      "suggested_named_reference_speaker_ids": [
+        "synth_01",
+        "synth_02",
+        "synth_03",
+        "synth_04"
+      ],
+      "variants": [
+        {
+          "id": "clean",
+          "noise_kind": "none",
+          "noise_seed": 20261010,
+          "target_noise_rms_dbfs": null,
+          "noise_metrics_before_mix_gain": {
+            "rms_dbfs": null,
+            "peak_dbfs": null,
+            "clipped_samples": 0
+          },
+          "mix_gain_db": 0.0,
+          "pcm_metrics_before_encoding": {
+            "rms_dbfs": -34.330866,
+            "peak_dbfs": -9.000001,
+            "clipped_samples": 0
+          },
+          "per_event_conditions": [
+            {
+              "event_id": "s01",
+              "effective_speech_gain_db": -3.0,
+              "digital_snr_db": null
+            },
+            {
+              "event_id": "s02",
+              "effective_speech_gain_db": -9.0,
+              "digital_snr_db": null
+            },
+            {
+              "event_id": "s03",
+              "effective_speech_gain_db": -18.0,
+              "digital_snr_db": null
+            },
+            {
+              "event_id": "s04",
+              "effective_speech_gain_db": -3.0,
+              "digital_snr_db": null
+            },
+            {
+              "event_id": "s05",
+              "effective_speech_gain_db": -24.0,
+              "digital_snr_db": null
+            },
+            {
+              "event_id": "s06",
+              "effective_speech_gain_db": -9.0,
+              "digital_snr_db": null
+            },
+            {
+              "event_id": "s07",
+              "effective_speech_gain_db": -6.0,
+              "digital_snr_db": null
+            },
+            {
+              "event_id": "s08",
+              "effective_speech_gain_db": -18.0,
+              "digital_snr_db": null
+            },
+            {
+              "event_id": "s09",
+              "effective_speech_gain_db": -3.0,
+              "digital_snr_db": null
+            },
+            {
+              "event_id": "s10",
+              "effective_speech_gain_db": -21.0,
+              "digital_snr_db": null
+            },
+            {
+              "event_id": "s11",
+              "effective_speech_gain_db": -24.0,
+              "digital_snr_db": null
+            },
+            {
+              "event_id": "s12",
+              "effective_speech_gain_db": -21.0,
+              "digital_snr_db": null
+            },
+            {
+              "event_id": "s13",
+              "effective_speech_gain_db": -6.0,
+              "digital_snr_db": null
+            }
+          ],
+          "files": [
+            {
+              "path": "recurring_six-clean.m4a",
+              "bytes": 574864,
+              "sha256": "ad06c218497fd7ea03a8c027596cdd28886674b84ce78e389cf1a0e165d99522"
+            }
+          ]
+        },
+        {
+          "id": "white",
+          "noise_kind": "white",
+          "noise_seed": 20261011,
+          "target_noise_rms_dbfs": -32,
+          "noise_metrics_before_mix_gain": {
+            "rms_dbfs": -32.0,
+            "peak_dbfs": -27.231117,
+            "clipped_samples": 0
+          },
+          "mix_gain_db": 0.0,
+          "pcm_metrics_before_encoding": {
+            "rms_dbfs": -29.999265,
+            "peak_dbfs": -8.092299,
+            "clipped_samples": 0
+          },
+          "per_event_conditions": [
+            {
+              "event_id": "s01",
+              "effective_speech_gain_db": -3.0,
+              "digital_snr_db": 4.562254
+            },
+            {
+              "event_id": "s02",
+              "effective_speech_gain_db": -9.0,
+              "digital_snr_db": 1.366778
+            },
+            {
+              "event_id": "s03",
+              "effective_speech_gain_db": -18.0,
+              "digital_snr_db": -10.384887
+            },
+            {
+              "event_id": "s04",
+              "effective_speech_gain_db": -3.0,
+              "digital_snr_db": 4.824254
+            },
+            {
+              "event_id": "s05",
+              "effective_speech_gain_db": -24.0,
+              "digital_snr_db": -12.874009
+            },
+            {
+              "event_id": "s06",
+              "effective_speech_gain_db": -9.0,
+              "digital_snr_db": 1.027789
+            },
+            {
+              "event_id": "s07",
+              "effective_speech_gain_db": -6.0,
+              "digital_snr_db": 1.713177
+            },
+            {
+              "event_id": "s08",
+              "effective_speech_gain_db": -18.0,
+              "digital_snr_db": -11.004601
+            },
+            {
+              "event_id": "s09",
+              "effective_speech_gain_db": -3.0,
+              "digital_snr_db": 5.073791
+            },
+            {
+              "event_id": "s10",
+              "effective_speech_gain_db": -21.0,
+              "digital_snr_db": -10.294962
+            },
+            {
+              "event_id": "s11",
+              "effective_speech_gain_db": -24.0,
+              "digital_snr_db": -13.093405
+            },
+            {
+              "event_id": "s12",
+              "effective_speech_gain_db": -21.0,
+              "digital_snr_db": -9.181809
+            },
+            {
+              "event_id": "s13",
+              "effective_speech_gain_db": -6.0,
+              "digital_snr_db": 0.597853
+            }
+          ],
+          "files": [
+            {
+              "path": "recurring_six-white.m4a",
+              "bytes": 1164115,
+              "sha256": "a848adca9fa919b877e779b3e99fd7096b9d1b8aecaf2d975001b19a07dc18fd"
+            }
+          ]
+        },
+        {
+          "id": "pink",
+          "noise_kind": "pink",
+          "noise_seed": 20261012,
+          "target_noise_rms_dbfs": -32,
+          "noise_metrics_before_mix_gain": {
+            "rms_dbfs": -32.0,
+            "peak_dbfs": -19.054511,
+            "clipped_samples": 0
+          },
+          "mix_gain_db": 0.0,
+          "pcm_metrics_before_encoding": {
+            "rms_dbfs": -30.001259,
+            "peak_dbfs": -7.953355,
+            "clipped_samples": 0
+          },
+          "per_event_conditions": [
+            {
+              "event_id": "s01",
+              "effective_speech_gain_db": -3.0,
+              "digital_snr_db": 4.772349
+            },
+            {
+              "event_id": "s02",
+              "effective_speech_gain_db": -9.0,
+              "digital_snr_db": 1.536269
+            },
+            {
+              "event_id": "s03",
+              "effective_speech_gain_db": -18.0,
+              "digital_snr_db": -10.253935
+            },
+            {
+              "event_id": "s04",
+              "effective_speech_gain_db": -3.0,
+              "digital_snr_db": 4.506079
+            },
+            {
+              "event_id": "s05",
+              "effective_speech_gain_db": -24.0,
+              "digital_snr_db": -13.124032
+            },
+            {
+              "event_id": "s06",
+              "effective_speech_gain_db": -9.0,
+              "digital_snr_db": 1.017047
+            },
+            {
+              "event_id": "s07",
+              "effective_speech_gain_db": -6.0,
+              "digital_snr_db": 1.294756
+            },
+            {
+              "event_id": "s08",
+              "effective_speech_gain_db": -18.0,
+              "digital_snr_db": -10.805891
+            },
+            {
+              "event_id": "s09",
+              "effective_speech_gain_db": -3.0,
+              "digital_snr_db": 5.137668
+            },
+            {
+              "event_id": "s10",
+              "effective_speech_gain_db": -21.0,
+              "digital_snr_db": -9.902738
+            },
+            {
+              "event_id": "s11",
+              "effective_speech_gain_db": -24.0,
+              "digital_snr_db": -13.120688
+            },
+            {
+              "event_id": "s12",
+              "effective_speech_gain_db": -21.0,
+              "digital_snr_db": -9.045559
+            },
+            {
+              "event_id": "s13",
+              "effective_speech_gain_db": -6.0,
+              "digital_snr_db": 0.823776
+            }
+          ],
+          "files": [
+            {
+              "path": "recurring_six-pink.m4a",
+              "bytes": 1164905,
+              "sha256": "fa272980ddfd5745921e3a2ade5c7d6aa94834cfda9806cb733a8a8d9beb5235"
+            }
+          ]
+        },
+        {
+          "id": "room_chatter",
+          "noise_kind": "room_chatter",
+          "noise_seed": 20261013,
+          "target_noise_rms_dbfs": -32,
+          "noise_metrics_before_mix_gain": {
+            "rms_dbfs": -32.0,
+            "peak_dbfs": -13.361642,
+            "clipped_samples": 0
+          },
+          "mix_gain_db": 0.0,
+          "pcm_metrics_before_encoding": {
+            "rms_dbfs": -30.003528,
+            "peak_dbfs": -7.417718,
+            "clipped_samples": 0
+          },
+          "per_event_conditions": [
+            {
+              "event_id": "s01",
+              "effective_speech_gain_db": -3.0,
+              "digital_snr_db": 4.092535
+            },
+            {
+              "event_id": "s02",
+              "effective_speech_gain_db": -9.0,
+              "digital_snr_db": 1.851637
+            },
+            {
+              "event_id": "s03",
+              "effective_speech_gain_db": -18.0,
+              "digital_snr_db": -10.03308
+            },
+            {
+              "event_id": "s04",
+              "effective_speech_gain_db": -3.0,
+              "digital_snr_db": 4.664942
+            },
+            {
+              "event_id": "s05",
+              "effective_speech_gain_db": -24.0,
+              "digital_snr_db": -12.751994
+            },
+            {
+              "event_id": "s06",
+              "effective_speech_gain_db": -9.0,
+              "digital_snr_db": 1.430228
+            },
+            {
+              "event_id": "s07",
+              "effective_speech_gain_db": -6.0,
+              "digital_snr_db": 1.219525
+            },
+            {
+              "event_id": "s08",
+              "effective_speech_gain_db": -18.0,
+              "digital_snr_db": -11.154814
+            },
+            {
+              "event_id": "s09",
+              "effective_speech_gain_db": -3.0,
+              "digital_snr_db": 5.072961
+            },
+            {
+              "event_id": "s10",
+              "effective_speech_gain_db": -21.0,
+              "digital_snr_db": -10.237461
+            },
+            {
+              "event_id": "s11",
+              "effective_speech_gain_db": -24.0,
+              "digital_snr_db": -13.106347
+            },
+            {
+              "event_id": "s12",
+              "effective_speech_gain_db": -21.0,
+              "digital_snr_db": -8.629697
+            },
+            {
+              "event_id": "s13",
+              "effective_speech_gain_db": -6.0,
+              "digital_snr_db": 0.011669
+            }
+          ],
+          "files": [
+            {
+              "path": "recurring_six-room_chatter.m4a",
+              "bytes": 1265347,
+              "sha256": "8fec9fd7ae5df4345bfcf2c1f71cf96cd2fedbdae43d534c52d98282ca621e27"
+            }
+          ]
+        },
+        {
+          "id": "impulse",
+          "noise_kind": "impulse",
+          "noise_seed": 20261014,
+          "target_noise_rms_dbfs": -23,
+          "noise_metrics_before_mix_gain": {
+            "rms_dbfs": -23.0,
+            "peak_dbfs": -3.876448,
+            "clipped_samples": 0
+          },
+          "mix_gain_db": 0.0,
+          "pcm_metrics_before_encoding": {
+            "rms_dbfs": -22.692613,
+            "peak_dbfs": -2.161458,
+            "clipped_samples": 0
+          },
+          "per_event_conditions": [
+            {
+              "event_id": "s01",
+              "effective_speech_gain_db": -3.0,
+              "digital_snr_db": -3.878648
+            },
+            {
+              "event_id": "s02",
+              "effective_speech_gain_db": -9.0,
+              "digital_snr_db": -6.05176
+            },
+            {
+              "event_id": "s03",
+              "effective_speech_gain_db": -18.0,
+              "digital_snr_db": -19.149252
+            },
+            {
+              "event_id": "s04",
+              "effective_speech_gain_db": -3.0,
+              "digital_snr_db": -5.687108
+            },
+            {
+              "event_id": "s05",
+              "effective_speech_gain_db": -24.0,
+              "digital_snr_db": -20.704904
+            },
+            {
+              "event_id": "s06",
+              "effective_speech_gain_db": -9.0,
+              "digital_snr_db": -8.158073
+            },
+            {
+              "event_id": "s07",
+              "effective_speech_gain_db": -6.0,
+              "digital_snr_db": -7.592429
+            },
+            {
+              "event_id": "s08",
+              "effective_speech_gain_db": -18.0,
+              "digital_snr_db": -19.782278
+            },
+            {
+              "event_id": "s09",
+              "effective_speech_gain_db": -3.0,
+              "digital_snr_db": -3.688907
+            },
+            {
+              "event_id": "s10",
+              "effective_speech_gain_db": -21.0,
+              "digital_snr_db": -19.924123
+            },
+            {
+              "event_id": "s11",
+              "effective_speech_gain_db": -24.0,
+              "digital_snr_db": -22.356473
+            },
+            {
+              "event_id": "s12",
+              "effective_speech_gain_db": -21.0,
+              "digital_snr_db": -17.548863
+            },
+            {
+              "event_id": "s13",
+              "effective_speech_gain_db": -6.0,
+              "digital_snr_db": -8.87627
+            }
+          ],
+          "files": [
+            {
+              "path": "recurring_six-impulse.m4a",
+              "bytes": 748090,
+              "sha256": "940af655c3b791dffe9ffc466a28fed647e0bdb9738e28002de1aa90b2005926"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "multilingual_eight",
+      "selected_language": null,
+      "duration_seconds": 121,
+      "timeline": [
+        {
+          "id": "s01",
+          "speaker_id": "synth_01",
+          "start": 0.0,
+          "end": 1.673812,
+          "text": "נבדוק את הדוח מחר.",
+          "language": "he",
+          "requested_language": "he",
+          "speech_gain_db": -6,
+          "voice": "he+m1",
+          "tempo_factor": 1,
+          "clean_clip_metrics": {
+            "rms_dbfs": -25.949885,
+            "peak_dbfs": -6.0,
+            "clipped_samples": 0
+          }
+        },
+        {
+          "id": "s02",
+          "speaker_id": "synth_02",
+          "start": 11.0,
+          "end": 12.996375,
+          "text": "Я проверю запись завтра.",
+          "language": "ru",
+          "requested_language": "ru",
+          "speech_gain_db": -12,
+          "voice": "ru+f2",
+          "tempo_factor": 1,
+          "clean_clip_metrics": {
+            "rms_dbfs": -23.59169,
+            "peak_dbfs": -6.0,
+            "clipped_samples": 0
+          }
+        },
+        {
+          "id": "s03",
+          "speaker_id": "synth_03",
+          "start": 22.0,
+          "end": 24.431562,
+          "text": "Θα ελέγξω την αναφορά αύριο.",
+          "language": "el",
+          "requested_language": "el",
+          "speech_gain_db": -18,
+          "voice": "el+m1",
+          "tempo_factor": 1,
+          "clean_clip_metrics": {
+            "rms_dbfs": -24.203818,
+            "peak_dbfs": -6.0,
+            "clipped_samples": 0
+          }
+        },
+        {
+          "id": "s04",
+          "speaker_id": "synth_04",
+          "start": 33.0,
+          "end": 35.13175,
+          "text": "Я перевірю переклад завтра.",
+          "language": "uk",
+          "requested_language": "uk",
+          "speech_gain_db": -9,
+          "voice": "uk+f2",
+          "tempo_factor": 1,
+          "clean_clip_metrics": {
+            "rms_dbfs": -24.027628,
+            "peak_dbfs": -6.0,
+            "clipped_samples": 0
+          }
+        },
+        {
+          "id": "s05",
+          "speaker_id": "synth_05",
+          "start": 44.0,
+          "end": 48.3805,
+          "text": "我明天会检查报告。",
+          "language": "zh",
+          "requested_language": "zh",
+          "speech_gain_db": -15,
+          "voice": "cmn+m1",
+          "tempo_factor": 1,
+          "clean_clip_metrics": {
+            "rms_dbfs": -27.42814,
+            "peak_dbfs": -6.0,
+            "clipped_samples": 0
+          }
+        },
+        {
+          "id": "s06",
+          "speaker_id": "synth_06",
+          "start": 55.0,
+          "end": 58.234938,
+          "text": "من فردا گزارش را بررسی می‌کنم.",
+          "language": "fa",
+          "requested_language": "fa",
+          "speech_gain_db": -21,
+          "voice": "fa+f2",
+          "tempo_factor": 1,
+          "clean_clip_metrics": {
+            "rms_dbfs": -23.501412,
+            "peak_dbfs": -6.0,
+            "clipped_samples": 0
+          }
+        },
+        {
+          "id": "s07",
+          "speaker_id": "synth_07",
+          "start": 66.0,
+          "end": 69.982187,
+          "text": "میں کل رپورٹ کا جائزہ لوں گا۔",
+          "language": "ur",
+          "requested_language": "ur",
+          "speech_gain_db": -12,
+          "voice": "ur+m1",
+          "tempo_factor": 1,
+          "clean_clip_metrics": {
+            "rms_dbfs": -23.994105,
+            "peak_dbfs": -6.0,
+            "clipped_samples": 0
+          }
+        },
+        {
+          "id": "s08",
+          "speaker_id": "synth_08",
+          "start": 77.0,
+          "end": 79.261938,
+          "text": "سأراجع المحضر غدًا.",
+          "language": "ar",
+          "requested_language": "ar",
+          "speech_gain_db": -6,
+          "voice": "ar+f2",
+          "tempo_factor": 1,
+          "clean_clip_metrics": {
+            "rms_dbfs": -22.046329,
+            "peak_dbfs": -6.0,
+            "clipped_samples": 0
+          }
+        },
+        {
+          "id": "s09",
+          "speaker_id": "synth_01",
+          "start": 88.0,
+          "end": 89.946812,
+          "text": "אין החלטה על מועד ההשקה.",
+          "language": "he",
+          "requested_language": "he",
+          "speech_gain_db": -18,
+          "voice": "he+m1",
+          "tempo_factor": 1,
+          "clean_clip_metrics": {
+            "rms_dbfs": -26.942608,
+            "peak_dbfs": -6.0,
+            "clipped_samples": 0
+          }
+        },
+        {
+          "id": "s10",
+          "speaker_id": "synth_05",
+          "start": 99.0,
+          "end": 104.09025,
+          "text": "我们还没有决定发布日期。",
+          "language": "zh",
+          "requested_language": "zh",
+          "speech_gain_db": -9,
+          "voice": "cmn+m1",
+          "tempo_factor": 1,
+          "clean_clip_metrics": {
+            "rms_dbfs": -27.672301,
+            "peak_dbfs": -6.0,
+            "clipped_samples": 0
+          }
+        },
+        {
+          "id": "s11",
+          "speaker_id": "synth_08",
+          "start": 110.0,
+          "end": 113.210625,
+          "text": "يبقى موعد الإطلاق غير محدد.",
+          "language": "ar",
+          "requested_language": "ar",
+          "speech_gain_db": -12,
+          "voice": "ar+f2",
+          "tempo_factor": 1,
+          "clean_clip_metrics": {
+            "rms_dbfs": -21.52153,
+            "peak_dbfs": -6.0,
+            "clipped_samples": 0
+          }
+        }
+      ],
+      "skipped_events": [],
+      "requested_languages": [
+        "he",
+        "ru",
+        "el",
+        "uk",
+        "zh",
+        "fa",
+        "ur",
+        "ar"
+      ],
+      "generated_languages": [
+        "he",
+        "ru",
+        "el",
+        "uk",
+        "zh",
+        "fa",
+        "ur",
+        "ar"
+      ],
+      "expected_speaker_count": 8,
+      "reference_meeting": "multilingual_eight-reference.json",
+      "speaker_references": [
+        {
+          "speaker_id": "synth_01",
+          "source_event_id": "s01",
+          "duration_seconds": 2.0,
+          "speech_duration_seconds": 1.6738125,
+          "silence_padding_seconds": 0.3261875,
+          "files": [
+            "references/multilingual_eight-synth_01.m4a"
+          ],
+          "identity_is_generator_truth": true
+        },
+        {
+          "speaker_id": "synth_02",
+          "source_event_id": "s02",
+          "duration_seconds": 2.0,
+          "speech_duration_seconds": 1.996375,
+          "silence_padding_seconds": 0.003625,
+          "files": [
+            "references/multilingual_eight-synth_02.m4a"
+          ],
+          "identity_is_generator_truth": true
+        },
+        {
+          "speaker_id": "synth_03",
+          "source_event_id": "s03",
+          "duration_seconds": 2.4315625,
+          "speech_duration_seconds": 2.4315625,
+          "silence_padding_seconds": 0.0,
+          "files": [
+            "references/multilingual_eight-synth_03.m4a"
+          ],
+          "identity_is_generator_truth": true
+        },
+        {
+          "speaker_id": "synth_04",
+          "source_event_id": "s04",
+          "duration_seconds": 2.13175,
+          "speech_duration_seconds": 2.13175,
+          "silence_padding_seconds": 0.0,
+          "files": [
+            "references/multilingual_eight-synth_04.m4a"
+          ],
+          "identity_is_generator_truth": true
+        },
+        {
+          "speaker_id": "synth_05",
+          "source_event_id": "s05",
+          "duration_seconds": 4.3805,
+          "speech_duration_seconds": 4.3805,
+          "silence_padding_seconds": 0.0,
+          "files": [
+            "references/multilingual_eight-synth_05.m4a"
+          ],
+          "identity_is_generator_truth": true
+        },
+        {
+          "speaker_id": "synth_06",
+          "source_event_id": "s06",
+          "duration_seconds": 3.2349375,
+          "speech_duration_seconds": 3.2349375,
+          "silence_padding_seconds": 0.0,
+          "files": [
+            "references/multilingual_eight-synth_06.m4a"
+          ],
+          "identity_is_generator_truth": true
+        },
+        {
+          "speaker_id": "synth_07",
+          "source_event_id": "s07",
+          "duration_seconds": 3.9821875,
+          "speech_duration_seconds": 3.9821875,
+          "silence_padding_seconds": 0.0,
+          "files": [
+            "references/multilingual_eight-synth_07.m4a"
+          ],
+          "identity_is_generator_truth": true
+        },
+        {
+          "speaker_id": "synth_08",
+          "source_event_id": "s08",
+          "duration_seconds": 2.2619375,
+          "speech_duration_seconds": 2.2619375,
+          "silence_padding_seconds": 0.0,
+          "files": [
+            "references/multilingual_eight-synth_08.m4a"
+          ],
+          "identity_is_generator_truth": true
+        }
+      ],
+      "suggested_named_reference_speaker_ids": [
+        "synth_01",
+        "synth_02",
+        "synth_03",
+        "synth_04"
+      ],
+      "variants": [
+        {
+          "id": "clean",
+          "noise_kind": "none",
+          "noise_seed": 20261110,
+          "target_noise_rms_dbfs": null,
+          "noise_metrics_before_mix_gain": {
+            "rms_dbfs": null,
+            "peak_dbfs": null,
+            "clipped_samples": 0
+          },
+          "mix_gain_db": 0.0,
+          "pcm_metrics_before_encoding": {
+            "rms_dbfs": -40.688676,
+            "peak_dbfs": -12.0,
+            "clipped_samples": 0
+          },
+          "per_event_conditions": [
+            {
+              "event_id": "s01",
+              "effective_speech_gain_db": -6.0,
+              "digital_snr_db": null
+            },
+            {
+              "event_id": "s02",
+              "effective_speech_gain_db": -12.0,
+              "digital_snr_db": null
+            },
+            {
+              "event_id": "s03",
+              "effective_speech_gain_db": -18.0,
+              "digital_snr_db": null
+            },
+            {
+              "event_id": "s04",
+              "effective_speech_gain_db": -9.0,
+              "digital_snr_db": null
+            },
+            {
+              "event_id": "s05",
+              "effective_speech_gain_db": -15.0,
+              "digital_snr_db": null
+            },
+            {
+              "event_id": "s06",
+              "effective_speech_gain_db": -21.0,
+              "digital_snr_db": null
+            },
+            {
+              "event_id": "s07",
+              "effective_speech_gain_db": -12.0,
+              "digital_snr_db": null
+            },
+            {
+              "event_id": "s08",
+              "effective_speech_gain_db": -6.0,
+              "digital_snr_db": null
+            },
+            {
+              "event_id": "s09",
+              "effective_speech_gain_db": -18.0,
+              "digital_snr_db": null
+            },
+            {
+              "event_id": "s10",
+              "effective_speech_gain_db": -9.0,
+              "digital_snr_db": null
+            },
+            {
+              "event_id": "s11",
+              "effective_speech_gain_db": -12.0,
+              "digital_snr_db": null
+            }
+          ],
+          "files": [
+            {
+              "path": "multilingual_eight-clean.m4a",
+              "bytes": 267559,
+              "sha256": "60fd2ac0bfbf622099832c43228330ccfaf2035aec14d50dec2df654886fbf20"
+            }
+          ]
+        },
+        {
+          "id": "white",
+          "noise_kind": "white",
+          "noise_seed": 20261111,
+          "target_noise_rms_dbfs": -32,
+          "noise_metrics_before_mix_gain": {
+            "rms_dbfs": -32.0,
+            "peak_dbfs": -27.231739,
+            "clipped_samples": 0
+          },
+          "mix_gain_db": 0.0,
+          "pcm_metrics_before_encoding": {
+            "rms_dbfs": -31.446791,
+            "peak_dbfs": -10.791841,
+            "clipped_samples": 0
+          },
+          "per_event_conditions": [
+            {
+              "event_id": "s01",
+              "effective_speech_gain_db": -6.0,
+              "digital_snr_db": 0.056364
+            },
+            {
+              "event_id": "s02",
+              "effective_speech_gain_db": -12.0,
+              "digital_snr_db": -3.603961
+            },
+            {
+              "event_id": "s03",
+              "effective_speech_gain_db": -18.0,
+              "digital_snr_db": -10.198547
+            },
+            {
+              "event_id": "s04",
+              "effective_speech_gain_db": -9.0,
+              "digital_snr_db": -1.009654
+            },
+            {
+              "event_id": "s05",
+              "effective_speech_gain_db": -15.0,
+              "digital_snr_db": -10.415019
+            },
+            {
+              "event_id": "s06",
+              "effective_speech_gain_db": -21.0,
+              "digital_snr_db": -12.512332
+            },
+            {
+              "event_id": "s07",
+              "effective_speech_gain_db": -12.0,
+              "digital_snr_db": -4.001486
+            },
+            {
+              "event_id": "s08",
+              "effective_speech_gain_db": -6.0,
+              "digital_snr_db": 3.972765
+            },
+            {
+              "event_id": "s09",
+              "effective_speech_gain_db": -18.0,
+              "digital_snr_db": -12.934891
+            },
+            {
+              "event_id": "s10",
+              "effective_speech_gain_db": -9.0,
+              "digital_snr_db": -4.685031
+            },
+            {
+              "event_id": "s11",
+              "effective_speech_gain_db": -12.0,
+              "digital_snr_db": -1.540999
+            }
+          ],
+          "files": [
+            {
+              "path": "multilingual_eight-white.m4a",
+              "bytes": 978463,
+              "sha256": "3d9d26d3421b2fa05a06760f51e1db0c45b0710a3e61a41ebf950ad3ce887b36"
+            }
+          ]
+        }
+      ]
+    }
+  ],
+  "limits": {
+    "duration_seconds_per_file": 180,
+    "bytes_per_file": 24000000,
+    "named_reference_upload_limit": 4,
+    "reference_min_seconds": 2,
+    "reference_max_seconds": 10
+  },
+  "room_chatter_kind": "overlapping_synthetic_TTS"
+}

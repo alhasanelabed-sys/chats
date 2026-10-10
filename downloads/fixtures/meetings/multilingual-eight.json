@@ -1,0 +1,451 @@
+{
+  "title": "مثال اصطناعي: ثماني لغات مع عودة متحدثين",
+  "language": "ar",
+  "duration_seconds": 121.0,
+  "speakers": [
+    {
+      "id": "synth_01",
+      "name": "أمينة (صوت اصطناعي ١)",
+      "matched_reference": false
+    },
+    {
+      "id": "synth_02",
+      "name": "باسم (صوت اصطناعي ٢)",
+      "matched_reference": false
+    },
+    {
+      "id": "synth_03",
+      "name": "جنى (صوت اصطناعي ٣)",
+      "matched_reference": false
+    },
+    {
+      "id": "synth_04",
+      "name": "داود (صوت اصطناعي ٤)",
+      "matched_reference": false
+    },
+    {
+      "id": "synth_05",
+      "name": "هالة (صوت اصطناعي ٥)",
+      "matched_reference": false
+    },
+    {
+      "id": "synth_06",
+      "name": "زياد (صوت اصطناعي ٦)",
+      "matched_reference": false
+    },
+    {
+      "id": "synth_07",
+      "name": "صوت اصطناعي 7",
+      "matched_reference": false
+    },
+    {
+      "id": "synth_08",
+      "name": "صوت اصطناعي 8",
+      "matched_reference": false
+    }
+  ],
+  "segments": [
+    {
+      "id": "s01",
+      "start": 0.0,
+      "end": 9.0,
+      "speaker_id": "synth_01",
+      "text": "נבדוק את הדוח מחר."
+    },
+    {
+      "id": "s02",
+      "start": 11.0,
+      "end": 20.0,
+      "speaker_id": "synth_02",
+      "text": "Я проверю запись завтра."
+    },
+    {
+      "id": "s03",
+      "start": 22.0,
+      "end": 31.0,
+      "speaker_id": "synth_03",
+      "text": "Θα ελέγξω την αναφορά αύριο."
+    },
+    {
+      "id": "s04",
+      "start": 33.0,
+      "end": 42.0,
+      "speaker_id": "synth_04",
+      "text": "Я перевірю переклад завтра."
+    },
+    {
+      "id": "s05",
+      "start": 44.0,
+      "end": 53.0,
+      "speaker_id": "synth_05",
+      "text": "我明天会检查报告。"
+    },
+    {
+      "id": "s06",
+      "start": 55.0,
+      "end": 64.0,
+      "speaker_id": "synth_06",
+      "text": "من فردا گزارش را بررسی می‌کنم."
+    },
+    {
+      "id": "s07",
+      "start": 66.0,
+      "end": 75.0,
+      "speaker_id": "synth_07",
+      "text": "میں کل رپورٹ کا جائزہ لوں گا۔"
+    },
+    {
+      "id": "s08",
+      "start": 77.0,
+      "end": 86.0,
+      "speaker_id": "synth_08",
+      "text": "سأراجع المحضر غدًا."
+    },
+    {
+      "id": "s09",
+      "start": 88.0,
+      "end": 97.0,
+      "speaker_id": "synth_01",
+      "text": "אין החלטה על מועד ההשקה."
+    },
+    {
+      "id": "s10",
+      "start": 99.0,
+      "end": 108.0,
+      "speaker_id": "synth_05",
+      "text": "我们还没有决定发布日期。"
+    },
+    {
+      "id": "s11",
+      "start": 110.0,
+      "end": 119.0,
+      "speaker_id": "synth_08",
+      "text": "يبقى موعد الإطلاق غير محدد."
+    }
+  ],
+  "minutes": {
+    "summary": "تتضمن العينة ثماني لغات. وردت مراجعات للتقرير والتسجيل والترجمة والمحضر في الغد. لم يُحدّد موعد إطلاق.",
+    "discussion_points": [
+      "مراجعة التقرير والتسجيل والترجمة والمحضر",
+      "موعد الإطلاق لم يُحسم"
+    ],
+    "decisions": [],
+    "action_items": [
+      {
+        "task": "مراجعة التسجيل",
+        "owner": "باسم (صوت اصطناعي ٢)",
+        "due_date": "غدًا",
+        "segment_ids": [
+          "s02"
+        ]
+      },
+      {
+        "task": "مراجعة الترجمة",
+        "owner": "داود (صوت اصطناعي ٤)",
+        "due_date": "غدًا",
+        "segment_ids": [
+          "s04"
+        ]
+      },
+      {
+        "task": "مراجعة المحضر",
+        "owner": "صوت اصطناعي 8",
+        "due_date": "غدًا",
+        "segment_ids": [
+          "s08"
+        ]
+      }
+    ],
+    "open_questions": [
+      "ما موعد الإطلاق؟"
+    ],
+    "speech_annotations": [
+      {
+        "segment_id": "s01",
+        "language": "he",
+        "status": "clear",
+        "reason": "نص مرجعي واضح باللغة المحددة؛ لم يُستنتج من صوت حقيقي."
+      },
+      {
+        "segment_id": "s02",
+        "language": "ru",
+        "status": "clear",
+        "reason": "نص مرجعي واضح باللغة المحددة؛ لم يُستنتج من صوت حقيقي."
+      },
+      {
+        "segment_id": "s03",
+        "language": "el",
+        "status": "clear",
+        "reason": "نص مرجعي واضح باللغة المحددة؛ لم يُستنتج من صوت حقيقي."
+      },
+      {
+        "segment_id": "s04",
+        "language": "uk",
+        "status": "clear",
+        "reason": "نص مرجعي واضح باللغة المحددة؛ لم يُستنتج من صوت حقيقي."
+      },
+      {
+        "segment_id": "s05",
+        "language": "zh",
+        "status": "clear",
+        "reason": "نص مرجعي واضح باللغة المحددة؛ لم يُستنتج من صوت حقيقي."
+      },
+      {
+        "segment_id": "s06",
+        "language": "fa",
+        "status": "clear",
+        "reason": "نص مرجعي واضح باللغة المحددة؛ لم يُستنتج من صوت حقيقي."
+      },
+      {
+        "segment_id": "s07",
+        "language": "ur",
+        "status": "clear",
+        "reason": "نص مرجعي واضح باللغة المحددة؛ لم يُستنتج من صوت حقيقي."
+      },
+      {
+        "segment_id": "s08",
+        "language": "ar",
+        "status": "clear",
+        "reason": "نص مرجعي واضح باللغة المحددة؛ لم يُستنتج من صوت حقيقي."
+      },
+      {
+        "segment_id": "s09",
+        "language": "he",
+        "status": "clear",
+        "reason": "نص مرجعي واضح باللغة المحددة؛ لم يُستنتج من صوت حقيقي."
+      },
+      {
+        "segment_id": "s10",
+        "language": "zh",
+        "status": "clear",
+        "reason": "نص مرجعي واضح باللغة المحددة؛ لم يُستنتج من صوت حقيقي."
+      },
+      {
+        "segment_id": "s11",
+        "language": "ar",
+        "status": "clear",
+        "reason": "نص مرجعي واضح باللغة المحددة؛ لم يُستنتج من صوت حقيقي."
+      }
+    ]
+  },
+  "_demo": true,
+  "_fixture": {
+    "id": "multilingual-eight",
+    "version": 1,
+    "synthetic": true,
+    "notice_ar": "بيانات اصطناعية مرجعية وليست نتيجة تعرف آلي أو قياس لهوية حقيقية أو مسافة أو ميكروفون. مستويات القرب والبعد تعني تخفيفًا رقميًا فقط.",
+    "content_kind": "manually_authored_reference_not_provider_output",
+    "identity_claim": "no_real_person_identification",
+    "distance_claim": "digital_attenuation_only_no_measured_metres",
+    "expected_speaker_count": 8,
+    "expected_roster": [
+      {
+        "speaker_id": "synth_01",
+        "first_seen_seconds": 0.0,
+        "first_segment_id": "s01",
+        "segment_ids": [
+          "s01",
+          "s09"
+        ],
+        "return_segment_ids": [
+          "s09"
+        ],
+        "truth_source": "scripted_synthetic_label"
+      },
+      {
+        "speaker_id": "synth_02",
+        "first_seen_seconds": 11.0,
+        "first_segment_id": "s02",
+        "segment_ids": [
+          "s02"
+        ],
+        "return_segment_ids": [],
+        "truth_source": "scripted_synthetic_label"
+      },
+      {
+        "speaker_id": "synth_03",
+        "first_seen_seconds": 22.0,
+        "first_segment_id": "s03",
+        "segment_ids": [
+          "s03"
+        ],
+        "return_segment_ids": [],
+        "truth_source": "scripted_synthetic_label"
+      },
+      {
+        "speaker_id": "synth_04",
+        "first_seen_seconds": 33.0,
+        "first_segment_id": "s04",
+        "segment_ids": [
+          "s04"
+        ],
+        "return_segment_ids": [],
+        "truth_source": "scripted_synthetic_label"
+      },
+      {
+        "speaker_id": "synth_05",
+        "first_seen_seconds": 44.0,
+        "first_segment_id": "s05",
+        "segment_ids": [
+          "s05",
+          "s10"
+        ],
+        "return_segment_ids": [
+          "s10"
+        ],
+        "truth_source": "scripted_synthetic_label"
+      },
+      {
+        "speaker_id": "synth_06",
+        "first_seen_seconds": 55.0,
+        "first_segment_id": "s06",
+        "segment_ids": [
+          "s06"
+        ],
+        "return_segment_ids": [],
+        "truth_source": "scripted_synthetic_label"
+      },
+      {
+        "speaker_id": "synth_07",
+        "first_seen_seconds": 66.0,
+        "first_segment_id": "s07",
+        "segment_ids": [
+          "s07"
+        ],
+        "return_segment_ids": [],
+        "truth_source": "scripted_synthetic_label"
+      },
+      {
+        "speaker_id": "synth_08",
+        "first_seen_seconds": 77.0,
+        "first_segment_id": "s08",
+        "segment_ids": [
+          "s08",
+          "s11"
+        ],
+        "return_segment_ids": [
+          "s11"
+        ],
+        "truth_source": "scripted_synthetic_label"
+      }
+    ],
+    "events": [
+      {
+        "segment_id": "s01",
+        "speaker_id": "synth_01",
+        "start": 0.0,
+        "end": 9.0,
+        "language": "he",
+        "speech_gain_db": -6,
+        "condition": "text_reference"
+      },
+      {
+        "segment_id": "s02",
+        "speaker_id": "synth_02",
+        "start": 11.0,
+        "end": 20.0,
+        "language": "ru",
+        "speech_gain_db": -12,
+        "condition": "text_reference"
+      },
+      {
+        "segment_id": "s03",
+        "speaker_id": "synth_03",
+        "start": 22.0,
+        "end": 31.0,
+        "language": "el",
+        "speech_gain_db": -18,
+        "condition": "text_reference"
+      },
+      {
+        "segment_id": "s04",
+        "speaker_id": "synth_04",
+        "start": 33.0,
+        "end": 42.0,
+        "language": "uk",
+        "speech_gain_db": -9,
+        "condition": "text_reference"
+      },
+      {
+        "segment_id": "s05",
+        "speaker_id": "synth_05",
+        "start": 44.0,
+        "end": 53.0,
+        "language": "zh",
+        "speech_gain_db": -15,
+        "condition": "text_reference"
+      },
+      {
+        "segment_id": "s06",
+        "speaker_id": "synth_06",
+        "start": 55.0,
+        "end": 64.0,
+        "language": "fa",
+        "speech_gain_db": -21,
+        "condition": "text_reference"
+      },
+      {
+        "segment_id": "s07",
+        "speaker_id": "synth_07",
+        "start": 66.0,
+        "end": 75.0,
+        "language": "ur",
+        "speech_gain_db": -12,
+        "condition": "text_reference"
+      },
+      {
+        "segment_id": "s08",
+        "speaker_id": "synth_08",
+        "start": 77.0,
+        "end": 86.0,
+        "language": "ar",
+        "speech_gain_db": -6,
+        "condition": "text_reference"
+      },
+      {
+        "segment_id": "s09",
+        "speaker_id": "synth_01",
+        "start": 88.0,
+        "end": 97.0,
+        "language": "he",
+        "speech_gain_db": -18,
+        "condition": "text_reference"
+      },
+      {
+        "segment_id": "s10",
+        "speaker_id": "synth_05",
+        "start": 99.0,
+        "end": 108.0,
+        "language": "zh",
+        "speech_gain_db": -9,
+        "condition": "text_reference"
+      },
+      {
+        "segment_id": "s11",
+        "speaker_id": "synth_08",
+        "start": 110.0,
+        "end": 119.0,
+        "language": "ar",
+        "speech_gain_db": -12,
+        "condition": "text_reference"
+      }
+    ],
+    "expected_behavior_ar": [
+      "عدّ المتحدث عند ظهوره الأول فقط مع الحفاظ على معرفه عندما يعود.",
+      "لا تختلق قرارًا أو ترجمة من كلام غير قابل للتفسير.",
+      "هذه توقعات مرجعية، وليست إثباتًا لنجاح المزود."
+    ],
+    "languages": [
+      "he",
+      "ru",
+      "el",
+      "uk",
+      "zh",
+      "fa",
+      "ur",
+      "ar"
+    ],
+    "audio_plan": "audio-plan.json#multilingual_eight",
+    "audio_policy": "Generate only languages listed by the local TTS engine; list unsupported languages as skipped; never use unrelated speech as a substitute."
+  }
+}
