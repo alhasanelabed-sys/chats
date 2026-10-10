@@ -1,6 +1,6 @@
 # حاضر 1.4.0 — المراقبة والتقارير والتجربة المرئية
 
-[تنزيل البرنامج مباشرةً (ZIP)](https://raw.githubusercontent.com/alhasanelabed-sys/chats/codex/attendance-1.4.0/attendance-pro/1.4.0/iug-attendance-pro-1.4.0.zip) · [بصمة SHA-256](iug-attendance-pro-1.4.0.zip.sha256) · [المصدر الكامل](source/)
+[تنزيل البرنامج مباشرةً (ZIP)](https://raw.githubusercontent.com/alhasanelabed-sys/chats/ca3db1266e9947546bd97604afda9254fa967cd3/attendance-pro/1.4.0/iug-attendance-pro-1.4.0.zip) · [بصمة SHA-256](iug-attendance-pro-1.4.0.zip.sha256) · [المصدر الكامل](source/)
 
 ## التشغيل
 
@@ -35,3 +35,5 @@
 ```text
 8278cda25a356dacc59e290a8b7826c5c4fd548afefa3ae4ee75077ddd9bca8e
 ```
+
+[التحقق من التنزيل العام ومطابقة البصمات](delivery-verification.json): HTTP 200 دون حساب أو رمز دخول، وملف ZIP يطابق المصدر الذي اجتاز 440 اختباراً.

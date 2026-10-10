@@ -1,0 +1,23 @@
+{
+  "status": "passed",
+  "checked_at_utc": "2026-10-10T13:10:30.809698+00:00",
+  "repository": "alhasanelabed-sys/chats",
+  "branch": "codex/attendance-1.4.0",
+  "artifact_commit": "ca3db1266e9947546bd97604afda9254fa967cd3",
+  "direct_download_url": "https://raw.githubusercontent.com/alhasanelabed-sys/chats/ca3db1266e9947546bd97604afda9254fa967cd3/attendance-pro/1.4.0/iug-attendance-pro-1.4.0.zip",
+  "http_status": 200,
+  "size_bytes": 3592993,
+  "sha256": "8278cda25a356dacc59e290a8b7826c5c4fd548afefa3ae4ee75077ddd9bca8e",
+  "zip_crc": "passed",
+  "all_manifest_file_hashes": "passed",
+  "source_fingerprint_matches_440_test_run": true,
+  "source_sha256": "b18f13fca42f8db9d47070edc0fdef07b06bfddbe9041b3bba4e7103108d5a5a",
+  "public_file_checks": {
+    "package-verification.json": 200,
+    "README.md": 200,
+    "docs/دليل_الإصدار_1.4.0.md": 200,
+    "docs/تقرير_التحقق_1.4.0.md": 200,
+    "source/hader/version.py": 200
+  },
+  "download_used_authentication": false
+}
