@@ -1,0 +1,491 @@
+{
+  "title": "مثال اصطناعي: ستة متحدثين وقرب رقمي مختلف",
+  "language": "ar",
+  "duration_seconds": 143.0,
+  "speakers": [
+    {
+      "id": "synth_01",
+      "name": "أمينة (صوت اصطناعي ١)",
+      "matched_reference": false
+    },
+    {
+      "id": "synth_02",
+      "name": "باسم (صوت اصطناعي ٢)",
+      "matched_reference": false
+    },
+    {
+      "id": "synth_03",
+      "name": "جنى (صوت اصطناعي ٣)",
+      "matched_reference": false
+    },
+    {
+      "id": "synth_04",
+      "name": "داود (صوت اصطناعي ٤)",
+      "matched_reference": false
+    },
+    {
+      "id": "synth_05",
+      "name": "هالة (صوت اصطناعي ٥)",
+      "matched_reference": false
+    },
+    {
+      "id": "synth_06",
+      "name": "زياد (صوت اصطناعي ٦)",
+      "matched_reference": false
+    }
+  ],
+  "segments": [
+    {
+      "id": "s01",
+      "start": 0.0,
+      "end": 9.0,
+      "speaker_id": "synth_01",
+      "text": "نبدأ اجتماع مراجعة النسخة التجريبية. نحتاج إلى خطة اختبار واضحة."
+    },
+    {
+      "id": "s02",
+      "start": 11.0,
+      "end": 20.0,
+      "speaker_id": "synth_02",
+      "text": "سأراجع شاشة التسجيل وأرسل ملاحظاتي غدًا."
+    },
+    {
+      "id": "s03",
+      "start": 22.0,
+      "end": 31.0,
+      "speaker_id": "synth_03",
+      "text": "اختبرت حفظ المحضر، ويحتاج البحث إلى تحسين."
+    },
+    {
+      "id": "s04",
+      "start": 33.0,
+      "end": 42.0,
+      "speaker_id": "synth_01",
+      "text": "نراجع الملاحظات قبل أن نقرر إطلاق النسخة."
+    },
+    {
+      "id": "s05",
+      "start": 44.0,
+      "end": 53.0,
+      "speaker_id": "synth_04",
+      "text": "انضممت الآن. سأفحص استيراد الملفات يوم الخميس."
+    },
+    {
+      "id": "s06",
+      "start": 55.0,
+      "end": 64.0,
+      "speaker_id": "synth_02",
+      "text": "عدت إلى النقاش. سأضيف اختبار العودة بعد إيقاف التسجيل مؤقتًا."
+    },
+    {
+      "id": "s07",
+      "start": 66.0,
+      "end": 75.0,
+      "speaker_id": "synth_05",
+      "text": "انضممت بعد البداية. واجهة الترجمة تحتاج إلى مراجعة النص الطويل."
+    },
+    {
+      "id": "s08",
+      "start": 77.0,
+      "end": 86.0,
+      "speaker_id": "synth_03",
+      "text": "عدت. سأراجع البحث دون تحديد موعد تسليم."
+    },
+    {
+      "id": "s09",
+      "start": 88.0,
+      "end": 97.0,
+      "speaker_id": "synth_01",
+      "text": "اتفقنا على تأجيل الإطلاق حتى مراجعة تقارير الاختبار."
+    },
+    {
+      "id": "s10",
+      "start": 99.0,
+      "end": 108.0,
+      "speaker_id": "synth_06",
+      "text": "انضممت متأخرًا. سأراجع تنسيق ملف PDF غدًا."
+    },
+    {
+      "id": "s11",
+      "start": 110.0,
+      "end": 119.0,
+      "speaker_id": "synth_04",
+      "text": "عدت. أؤكد أن موعد تقرير الاستيراد يوم الخميس."
+    },
+    {
+      "id": "s12",
+      "start": 121.0,
+      "end": 130.0,
+      "speaker_id": "synth_06",
+      "text": "عدت مرة ثانية، وسأضمّن أسماء المتحدثين في مراجعة PDF."
+    },
+    {
+      "id": "s13",
+      "start": 132.0,
+      "end": 141.0,
+      "speaker_id": "synth_05",
+      "text": "عدت. كم لغة سنختبر في الجولة التالية؟"
+    }
+  ],
+  "minutes": {
+    "summary": "ناقش ستة متحدثين خطة اختبار النسخة، واتفقوا على تأجيل الإطلاق حتى مراجعة التقارير. انضم داود وهالة وزياد بعد البداية، ثم عادوا بالمعرفات المرجعية نفسها.",
+    "discussion_points": [
+      "اختبار التسجيل والبحث واستيراد الملفات والترجمة وPDF",
+      "إسناد المقاطع للمتحدث عند العودة"
+    ],
+    "decisions": [
+      {
+        "text": "تأجيل الإطلاق حتى مراجعة تقارير الاختبار.",
+        "segment_ids": [
+          "s09"
+        ]
+      }
+    ],
+    "action_items": [
+      {
+        "task": "مراجعة شاشة التسجيل وإرسال الملاحظات",
+        "owner": "باسم (صوت اصطناعي ٢)",
+        "due_date": "غدًا",
+        "segment_ids": [
+          "s02"
+        ]
+      },
+      {
+        "task": "فحص استيراد الملفات",
+        "owner": "داود (صوت اصطناعي ٤)",
+        "due_date": "الخميس",
+        "segment_ids": [
+          "s05",
+          "s11"
+        ]
+      },
+      {
+        "task": "مراجعة البحث",
+        "owner": "جنى (صوت اصطناعي ٣)",
+        "due_date": null,
+        "segment_ids": [
+          "s08"
+        ]
+      },
+      {
+        "task": "مراجعة تنسيق PDF وأسماء المتحدثين",
+        "owner": "زياد (صوت اصطناعي ٦)",
+        "due_date": "غدًا",
+        "segment_ids": [
+          "s10",
+          "s12"
+        ]
+      }
+    ],
+    "open_questions": [
+      "كم لغة سنختبر في الجولة التالية؟"
+    ],
+    "speech_annotations": [
+      {
+        "segment_id": "s01",
+        "language": "ar",
+        "status": "clear",
+        "reason": "نص مرجعي واضح باللغة المحددة؛ لم يُستنتج من صوت حقيقي."
+      },
+      {
+        "segment_id": "s02",
+        "language": "ar",
+        "status": "clear",
+        "reason": "نص مرجعي واضح باللغة المحددة؛ لم يُستنتج من صوت حقيقي."
+      },
+      {
+        "segment_id": "s03",
+        "language": "ar",
+        "status": "clear",
+        "reason": "نص مرجعي واضح باللغة المحددة؛ لم يُستنتج من صوت حقيقي."
+      },
+      {
+        "segment_id": "s04",
+        "language": "ar",
+        "status": "clear",
+        "reason": "نص مرجعي واضح باللغة المحددة؛ لم يُستنتج من صوت حقيقي."
+      },
+      {
+        "segment_id": "s05",
+        "language": "ar",
+        "status": "clear",
+        "reason": "نص مرجعي واضح باللغة المحددة؛ لم يُستنتج من صوت حقيقي."
+      },
+      {
+        "segment_id": "s06",
+        "language": "ar",
+        "status": "clear",
+        "reason": "نص مرجعي واضح باللغة المحددة؛ لم يُستنتج من صوت حقيقي."
+      },
+      {
+        "segment_id": "s07",
+        "language": "ar",
+        "status": "clear",
+        "reason": "نص مرجعي واضح باللغة المحددة؛ لم يُستنتج من صوت حقيقي."
+      },
+      {
+        "segment_id": "s08",
+        "language": "ar",
+        "status": "clear",
+        "reason": "نص مرجعي واضح باللغة المحددة؛ لم يُستنتج من صوت حقيقي."
+      },
+      {
+        "segment_id": "s09",
+        "language": "ar",
+        "status": "clear",
+        "reason": "نص مرجعي واضح باللغة المحددة؛ لم يُستنتج من صوت حقيقي."
+      },
+      {
+        "segment_id": "s10",
+        "language": "ar",
+        "status": "clear",
+        "reason": "نص مرجعي واضح باللغة المحددة؛ لم يُستنتج من صوت حقيقي."
+      },
+      {
+        "segment_id": "s11",
+        "language": "ar",
+        "status": "clear",
+        "reason": "نص مرجعي واضح باللغة المحددة؛ لم يُستنتج من صوت حقيقي."
+      },
+      {
+        "segment_id": "s12",
+        "language": "ar",
+        "status": "clear",
+        "reason": "نص مرجعي واضح باللغة المحددة؛ لم يُستنتج من صوت حقيقي."
+      },
+      {
+        "segment_id": "s13",
+        "language": "ar",
+        "status": "clear",
+        "reason": "نص مرجعي واضح باللغة المحددة؛ لم يُستنتج من صوت حقيقي."
+      }
+    ]
+  },
+  "_demo": true,
+  "_fixture": {
+    "id": "six-speakers-distance",
+    "version": 1,
+    "synthetic": true,
+    "notice_ar": "بيانات اصطناعية مرجعية وليست نتيجة تعرف آلي أو قياس لهوية حقيقية أو مسافة أو ميكروفون. مستويات القرب والبعد تعني تخفيفًا رقميًا فقط.",
+    "content_kind": "manually_authored_reference_not_provider_output",
+    "identity_claim": "no_real_person_identification",
+    "distance_claim": "digital_attenuation_only_no_measured_metres",
+    "expected_speaker_count": 6,
+    "expected_roster": [
+      {
+        "speaker_id": "synth_01",
+        "first_seen_seconds": 0.0,
+        "first_segment_id": "s01",
+        "segment_ids": [
+          "s01",
+          "s04",
+          "s09"
+        ],
+        "return_segment_ids": [
+          "s04",
+          "s09"
+        ],
+        "truth_source": "scripted_synthetic_label"
+      },
+      {
+        "speaker_id": "synth_02",
+        "first_seen_seconds": 11.0,
+        "first_segment_id": "s02",
+        "segment_ids": [
+          "s02",
+          "s06"
+        ],
+        "return_segment_ids": [
+          "s06"
+        ],
+        "truth_source": "scripted_synthetic_label"
+      },
+      {
+        "speaker_id": "synth_03",
+        "first_seen_seconds": 22.0,
+        "first_segment_id": "s03",
+        "segment_ids": [
+          "s03",
+          "s08"
+        ],
+        "return_segment_ids": [
+          "s08"
+        ],
+        "truth_source": "scripted_synthetic_label"
+      },
+      {
+        "speaker_id": "synth_04",
+        "first_seen_seconds": 44.0,
+        "first_segment_id": "s05",
+        "segment_ids": [
+          "s05",
+          "s11"
+        ],
+        "return_segment_ids": [
+          "s11"
+        ],
+        "truth_source": "scripted_synthetic_label"
+      },
+      {
+        "speaker_id": "synth_05",
+        "first_seen_seconds": 66.0,
+        "first_segment_id": "s07",
+        "segment_ids": [
+          "s07",
+          "s13"
+        ],
+        "return_segment_ids": [
+          "s13"
+        ],
+        "truth_source": "scripted_synthetic_label"
+      },
+      {
+        "speaker_id": "synth_06",
+        "first_seen_seconds": 99.0,
+        "first_segment_id": "s10",
+        "segment_ids": [
+          "s10",
+          "s12"
+        ],
+        "return_segment_ids": [
+          "s12"
+        ],
+        "truth_source": "scripted_synthetic_label"
+      }
+    ],
+    "events": [
+      {
+        "segment_id": "s01",
+        "speaker_id": "synth_01",
+        "start": 0.0,
+        "end": 9.0,
+        "language": "ar",
+        "speech_gain_db": -3,
+        "condition": "clean_digital_gain"
+      },
+      {
+        "segment_id": "s02",
+        "speaker_id": "synth_02",
+        "start": 11.0,
+        "end": 20.0,
+        "language": "ar",
+        "speech_gain_db": -9,
+        "condition": "clean_digital_gain"
+      },
+      {
+        "segment_id": "s03",
+        "speaker_id": "synth_03",
+        "start": 22.0,
+        "end": 31.0,
+        "language": "ar",
+        "speech_gain_db": -18,
+        "condition": "clean_digital_gain"
+      },
+      {
+        "segment_id": "s04",
+        "speaker_id": "synth_01",
+        "start": 33.0,
+        "end": 42.0,
+        "language": "ar",
+        "speech_gain_db": -3,
+        "condition": "clean_digital_gain"
+      },
+      {
+        "segment_id": "s05",
+        "speaker_id": "synth_04",
+        "start": 44.0,
+        "end": 53.0,
+        "language": "ar",
+        "speech_gain_db": -24,
+        "condition": "clean_digital_gain"
+      },
+      {
+        "segment_id": "s06",
+        "speaker_id": "synth_02",
+        "start": 55.0,
+        "end": 64.0,
+        "language": "ar",
+        "speech_gain_db": -9,
+        "condition": "clean_digital_gain"
+      },
+      {
+        "segment_id": "s07",
+        "speaker_id": "synth_05",
+        "start": 66.0,
+        "end": 75.0,
+        "language": "ar",
+        "speech_gain_db": -6,
+        "condition": "clean_digital_gain"
+      },
+      {
+        "segment_id": "s08",
+        "speaker_id": "synth_03",
+        "start": 77.0,
+        "end": 86.0,
+        "language": "ar",
+        "speech_gain_db": -18,
+        "condition": "clean_digital_gain"
+      },
+      {
+        "segment_id": "s09",
+        "speaker_id": "synth_01",
+        "start": 88.0,
+        "end": 97.0,
+        "language": "ar",
+        "speech_gain_db": -3,
+        "condition": "clean_digital_gain"
+      },
+      {
+        "segment_id": "s10",
+        "speaker_id": "synth_06",
+        "start": 99.0,
+        "end": 108.0,
+        "language": "ar",
+        "speech_gain_db": -21,
+        "condition": "clean_digital_gain"
+      },
+      {
+        "segment_id": "s11",
+        "speaker_id": "synth_04",
+        "start": 110.0,
+        "end": 119.0,
+        "language": "ar",
+        "speech_gain_db": -24,
+        "condition": "clean_digital_gain"
+      },
+      {
+        "segment_id": "s12",
+        "speaker_id": "synth_06",
+        "start": 121.0,
+        "end": 130.0,
+        "language": "ar",
+        "speech_gain_db": -21,
+        "condition": "clean_digital_gain"
+      },
+      {
+        "segment_id": "s13",
+        "speaker_id": "synth_05",
+        "start": 132.0,
+        "end": 141.0,
+        "language": "ar",
+        "speech_gain_db": -6,
+        "condition": "clean_digital_gain"
+      }
+    ],
+    "expected_behavior_ar": [
+      "عدّ المتحدث عند ظهوره الأول فقط مع الحفاظ على معرفه عندما يعود.",
+      "لا تختلق قرارًا أو ترجمة من كلام غير قابل للتفسير.",
+      "هذه توقعات مرجعية، وليست إثباتًا لنجاح المزود."
+    ],
+    "audio_plan": "audio-plan.json#recurring_six",
+    "levels_db": [
+      -3,
+      -9,
+      -18,
+      -24,
+      -6,
+      -21
+    ],
+    "overlap": false
+  }
+}

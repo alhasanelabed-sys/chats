@@ -88,6 +88,7 @@ public class MainActivity extends Activity {
     private AlertDialog sampleDialog;
     private long sampleStarted;
     private Runnable sampleTick;
+    private AlertDialog fixtureDialog;
 
     private final BroadcastReceiver recorderUpdates = new BroadcastReceiver() {
         @Override public void onReceive(Context c, Intent intent) {
@@ -165,6 +166,7 @@ public class MainActivity extends Activity {
     @Override public void onPause() {
         if (titleField != null && "meeting".equals(screen)) prefs.edit().putString("last_title",titleField.getText().toString()).apply();
         finishSample(false,null);
+        if(fixtureDialog!=null){fixtureDialog.dismiss();fixtureDialog=null;}
         stopPlayer();
         super.onPause();
     }
@@ -251,6 +253,7 @@ public class MainActivity extends Activity {
         info.addView(label("للأصوات البعيدة ضع الهاتف وسط الطاولة، أو استخدم ميكروفون اجتماعات. التطبيق لا يضمن التقاط كلام لا يصل بوضوح إلى الميكروفون.",14,MUTED,false));
         content.addView(info);
         Button demo=button("تجربة اجتماع بمحتوى تجريبي",false,()->showDemo()); demo.setEnabled(!busy); content.addView(demo);
+        Button fixtures=button("مختبر المتحدثين واللغات والضوضاء",false,()->showFixtures());fixtures.setEnabled(!busy&&!RecordingService.isRecording());content.addView(fixtures);
         updateRecording(RecordingService.elapsedMillis(),0);
     }
 
@@ -384,6 +387,8 @@ public class MainActivity extends Activity {
         exported.put("minutes_need_review",meeting.optBoolean("_minutes_stale"));
         if(meeting.has("_evaluation")){exported.put("evaluation",meeting.getJSONObject("_evaluation"));if(meeting.has("_baseline_segments"))exported.put("baseline_segments",meeting.getJSONArray("_baseline_segments"));}
         if(meeting.has("_speech_flags"))exported.put("speech_flags_reviewed_by_user",meeting.getJSONObject("_speech_flags"));
+        if(meeting.has("_code_notes"))exported.put("text_code_notes_reviewed_by_user",meeting.getJSONObject("_code_notes"));
+        if(meeting.has("_fixture"))exported.put("synthetic_fixture",meeting.getJSONObject("_fixture"));
         if(meeting.has("_translations")){exported.put("translations",meeting.getJSONObject("_translations"));exported.put("translations_need_review",meeting.optBoolean("_translations_stale"));}
         exported.put("demo",meeting.optBoolean("_demo"));return exported;
     }
@@ -567,6 +572,10 @@ public class MainActivity extends Activity {
         LinearLayout head=card();head.addView(label(result.optString("title"),24,INK,true));
         head.addView(label(time(result.optDouble("duration_seconds"))+" • "+result.optJSONArray("speakers").length()+" متحدثين"+(result.optBoolean("_demo")?" • محتوى تجريبي":""),13,MUTED,false));
         head.addView(label("اضغط على اسم متحدث لتصحيحه. راجع المحضر قبل مشاركته.",13,MUTED,false));
+        if(result.optJSONObject("_fixture")!=null){
+            head.addView(label(result.optJSONObject("_fixture").optString("notice_ar","مرجع تجريبي مصطنع، وليس نتيجة تحليل صوت حقيقي."),13,MUTED,false));
+            head.addView(button("محاكاة ظهور المتحدثين وعودتهم",false,()->simulateRoster()));
+        }
         if(result.optBoolean("_minutes_stale"))head.addView(label("النص تغيّر؛ المحضر يحتاج إعادة تلخيص ومراجعة.",15,Color.rgb(161,94,12),true));
         JSONObject measured=result.optJSONObject("_evaluation");
         if(measured!=null)head.addView(label("اختبار بمرجع راجعته أنت · راجع نتائج الكلمات والأحرف وحدود القياس أدناه",13,TEAL,true));
@@ -639,7 +648,10 @@ public class MainActivity extends Activity {
             File audio=resultAudio();if(audio!=null)row.addView(button("استماع من "+time(seg.optDouble("start")),false,()->playAt(audio,seg.optDouble("start"))));
             Button edit=button("تعديل النص والمتحدث",false,()->editSegment(seg));edit.setEnabled(!analysisRunning);row.addView(edit);rows.addView(row);
             String annotation=speechNote(result,seg.optString("id"));if(!annotation.isEmpty())row.addView(label(annotation,13,MUTED,false));
+            String conditions=fixtureConditions(result,seg.optString("id"));if(!conditions.isEmpty())row.addView(label(conditions,13,MUTED,false));
             Button language=button("تحديد اللغة ووضوح الكلام",false,()->editSpeechFlag(seg));language.setEnabled(!analysisRunning);row.addView(language);
+            String codeNote=codeNote(result,seg.optString("id"));if(!codeNote.isEmpty())row.addView(label(codeNote,13,MUTED,false));
+            Button decode=button("فك ترميز النص أو توثيق عدم فهمه",false,()->inspectCode(seg));decode.setEnabled(!analysisRunning);row.addView(decode);
         }
         if(count==0)rows.addView(label(segments.length()==0?"لم يظهر كلام واضح في التسجيل.":"لا توجد مقاطع تطابق البحث.",15,MUTED,false));
     }
@@ -653,7 +665,7 @@ public class MainActivity extends Activity {
         Spinner speaker=new Spinner(this);speaker.setAdapter(new ArrayAdapter<String>(this,android.R.layout.simple_spinner_dropdown_item,names));speaker.setSelection(selected);fields.addView(speaker);
         AlertDialog dialog=new AlertDialog.Builder(this).setTitle("تصحيح المقطع").setView(fields).setNegativeButton("إلغاء",null).setPositiveButton("حفظ التعديل",null).create();
         dialog.setOnShowListener(d->dialog.getButton(AlertDialog.BUTTON_POSITIVE).setOnClickListener(v->{
-            try{JSONObject changed=MeetingEdits.applySegmentEdit(result,segment.optString("id"),text.getText().toString(),people.getJSONObject(speaker.getSelectedItemPosition()).getString("id"));invalidateTranslations(changed);changed.remove("_evaluation");JSONObject flags=changed.optJSONObject("_speech_flags");if(flags!=null)flags.remove(segment.optString("id"));commitEdit(changed,true);dialog.dismiss();}
+            try{JSONObject changed=MeetingEdits.applySegmentEdit(result,segment.optString("id"),text.getText().toString(),people.getJSONObject(speaker.getSelectedItemPosition()).getString("id"));invalidateTranslations(changed);changed.remove("_evaluation");JSONObject flags=changed.optJSONObject("_speech_flags");if(flags!=null)flags.remove(segment.optString("id"));JSONObject codes=changed.optJSONObject("_code_notes");if(codes!=null)codes.remove(segment.optString("id"));commitEdit(changed,true);dialog.dismiss();}
             catch(Exception ex){text.setError(ex.getMessage());}
         }));dialog.show();
     }
@@ -684,7 +696,7 @@ public class MainActivity extends Activity {
                 try{final JSONObject input=new JSONObject(result.toString());analysisRunning=true;showResult();
                     worker.execute(()->{try{
                         JSONObject updated=MeetingApi.summarize(url,token,input);
-                        for(String key:new String[]{"_id","_saved_at","_audio_path","_demo","_baseline_segments","_analysis_seconds","_audio_bytes","_device","_capture_kind","_signal","_test_notes","_evaluation","_translations","_speech_flags"})if(input.has(key))updated.put(key,input.get(key));
+                        for(String key:new String[]{"_id","_saved_at","_audio_path","_demo","_fixture","_baseline_segments","_analysis_seconds","_audio_bytes","_device","_capture_kind","_signal","_test_notes","_evaluation","_translations","_speech_flags","_code_notes"})if(input.has(key))updated.put(key,input.get(key));
                         invalidateTranslations(updated);
                         updated.put("_minutes_stale",false);updated.put("_summary_edited",false);store.saveMeeting(updated);
                         handler.post(()->{analysisRunning=false;busy=importRunning;getApplicationContext().sendBroadcast(new Intent(ANALYSIS_UPDATE).setPackage(getPackageName()).putExtra("saved",true));if(!isDestroyed()&&!isFinishing()){result=updated;resultTab="minutes";showResult();}});
@@ -767,7 +779,7 @@ public class MainActivity extends Activity {
     private String speechNote(JSONObject meeting,String id){
         JSONObject flag=speechFlag(meeting,id);if(flag==null)return "";
         return languageName(flag.optString("language","unknown"))+" · "+speechStatusName(flag.optString("status","uninterpretable"))+"\n"+flag.optString("reason")+
-            (flag.optBoolean("reviewed_by_user")?" · تسمية راجعها المستخدم":meeting.optBoolean("_minutes_stale")?" · تقدير آلي قديم بعد تصحيح النص":" · تقدير آلي يحتاج مراجعة");
+            (flag.optBoolean("reviewed_by_user")?" · تسمية راجعها المستخدم":meeting.has("_fixture")?" · وصف محدد في المرجع المصطنع":meeting.optBoolean("_minutes_stale")?" · تقدير آلي قديم بعد تصحيح النص":" · تقدير آلي يحتاج مراجعة");
     }
 
     private void editSpeechFlag(JSONObject segment){
@@ -840,8 +852,10 @@ public class MainActivity extends Activity {
 
     private String exportText(JSONObject meeting){
         StringBuilder text=new StringBuilder(store.report(meeting));JSONObject score=meeting.optJSONObject("_evaluation");if(score!=null)text.append("\nنتيجة تجربة موثقة\n").append(evaluationText(score)).append("\n");
+        JSONObject fixture=meeting.optJSONObject("_fixture");if(fixture!=null)text.append("\nمرجع مصطنع للتجربة\n").append(fixture.optString("notice_ar")).append("\n");
         JSONArray segments=meeting.optJSONArray("segments");
         if(segments!=null)for(int i=0;i<segments.length();i++){JSONObject segment=segments.optJSONObject(i);if(segment==null)continue;JSONObject flag=speechFlag(meeting,segment.optString("id"));if(flag!=null&&(!"ar".equals(flag.optString("language"))||!"clear".equals(flag.optString("status"))))text.append("\nلغة ووضوح المقطع ").append(segment.optString("id")).append(" · ").append(speakerName(meeting,segment.optString("speaker_id"))).append(" · ").append(time(segment.optDouble("start"))).append("\n").append(speechNote(meeting,segment.optString("id"))).append("\n");}
+        if(segments!=null)for(int i=0;i<segments.length();i++){JSONObject segment=segments.optJSONObject(i);if(segment==null)continue;String note=codeNote(meeting,segment.optString("id"));if(!note.isEmpty())text.append("\nترميز المقطع ").append(segment.optString("id")).append(" · ").append(speakerName(meeting,segment.optString("speaker_id"))).append(" · ").append(time(segment.optDouble("start"))).append("\n").append(note).append("\n");}
         JSONObject all=meeting.optJSONObject("_translations");if(all!=null){java.util.Iterator<String> keys=all.keys();while(keys.hasNext()){String code=keys.next();JSONObject translated=all.optJSONObject(code);if(translated!=null)text.append("\nالترجمة: ").append(code).append(translated.optBoolean("_stale")?" · المصدر تغيّر بعد الترجمة":"").append("\n").append(translated.optString("translated_report")).append("\n");}}
         return text.toString();
     }
@@ -865,6 +879,87 @@ public class MainActivity extends Activity {
                     commitEdit(updated,true);
                 }catch(Exception ex){error("تعذر حفظ الاسم.");}
             }).show();
+    }
+
+    private JSONObject readFixtureAsset(String asset)throws Exception{
+        if(!asset.matches("fixtures/[a-z0-9-]+\\.json"))throw new Exception("مسار تجربة غير صالح.");
+        try(InputStream input=getAssets().open(asset);java.io.ByteArrayOutputStream bytes=new java.io.ByteArrayOutputStream()){
+            byte[] buffer=new byte[4096];int n;while((n=input.read(buffer))!=-1){if(bytes.size()+n>300_000)throw new Exception("بيانات التجربة أكبر من الحد.");bytes.write(buffer,0,n);}
+            return new JSONObject(new String(bytes.toByteArray(),StandardCharsets.UTF_8));
+        }
+    }
+
+    private void showFixtures(){
+        screen="fixtures";shell("مختبر قابل لإعادة التجربة");
+        try{
+            JSONObject index=readFixtureAsset("fixtures/index.json");section("تجارب مصطنعة",index.optString("notice_ar"));
+            JSONArray cases=index.getJSONArray("fixtures");
+            for(int i=0;i<cases.length();i++){
+                JSONObject item=cases.getJSONObject(i);LinearLayout row=card();row.addView(label(item.getString("title"),21,INK,true));row.addView(label(item.optString("description_ar"),14,MUTED,false));
+                row.addView(button("فتح مرجع التجربة",true,()->{try{result=readFixtureAsset(item.getString("asset"));resultTab="transcript";transcriptQuery="";showResult();}catch(Exception ex){error(ex.getMessage());}}));content.addView(row);
+            }
+            section("اختبار صوت فعلي", "تتوفر ملفات صوت مصطنعة ومرجعها في فرع التطبيق على GitHub، ضمن downloads/fixtures. استورد الملف ثم وافق على التحليل، وقارن الناتج بمرجعه. قائمة هذه الشاشة تتبع المرجع المعروف؛ لا تقيس التعرف الآلي. لا يتطلب استعراض المرجع اتصالًا.");
+            content.addView(button("تنزيل الصوت التجريبي ومرجعه",false,()->{try{startActivity(new Intent(Intent.ACTION_VIEW,Uri.parse("https://raw.githubusercontent.com/alhasanelabed-sys/chats/refs/heads/app/majlis-android/downloads/fixtures/majlis-fixtures.zip")));}catch(Exception ex){error("تعذر فتح المتصفح؛ افتح downloads/fixtures في مستودع التطبيق.");}}));
+        }catch(Exception ex){error("تعذر فتح بيانات التجارب: "+ex.getMessage());}
+    }
+
+    private void simulateRoster(){
+        if(result==null||!result.has("_fixture"))return;
+        final JSONObject meeting=result;final JSONArray segments=meeting.optJSONArray("segments");if(segments==null||segments.length()==0)return;
+        LinearLayout body=new LinearLayout(this);body.setOrientation(LinearLayout.VERTICAL);body.setPadding(dp(18),0,dp(18),dp(12));
+        body.addView(label("محاكاة من مرجع مصطنع. تُضاف الهوية عند أول مقطع لها، وتبقى الهوية نفسها عند العودة. كل خطوة مقطع؛ التشغيل مسرّع ولا يستمع إلى الميكروفون.",13,MUTED,false));
+        TextView event=label("",15,TEAL,true),roster=label("",14,INK,false),utterance=label("",15,INK,false);body.addView(event);body.addView(roster);body.addView(utterance);
+        final int[] count={0};final boolean[] running={false};
+        Runnable refresh=()->{
+            java.util.LinkedHashMap<String,Integer> turns=new java.util.LinkedHashMap<>();java.util.LinkedHashMap<String,Double> first=new java.util.LinkedHashMap<>();
+            for(int j=0;j<count[0];j++){JSONObject seg=segments.optJSONObject(j);String id=seg.optString("speaker_id");if(!turns.containsKey(id)){turns.put(id,0);first.put(id,seg.optDouble("start"));}turns.put(id,turns.get(id)+1);}
+            StringBuilder list=new StringBuilder("القائمة: "+turns.size()+" / "+meeting.optJSONArray("speakers").length()+" متحدثين\n");
+            for(String id:turns.keySet())list.append(speakerName(meeting,id)).append(" · أول كلام ").append(time(first.get(id))).append(" · مرات الكلام ").append(turns.get(id)).append("\n");roster.setText(list.toString());
+            if(count[0]==0){event.setText("لم يبدأ أحد الكلام بعد");utterance.setText("اضغط المقطع التالي أو تشغيل المحاكاة.");return;}
+            JSONObject seg=segments.optJSONObject(count[0]-1);String id=seg.optString("speaker_id");event.setText((turns.get(id)==1?"إضافة متحدث إلى القائمة: ":"عودة متحدث مسجل: ")+speakerName(meeting,id)+" · "+time(seg.optDouble("start"))+" · "+count[0]+"/"+segments.length());utterance.setText(seg.optString("text")+"\n"+speechNote(meeting,seg.optString("id"))+"\n"+fixtureConditions(meeting,seg.optString("id")));
+        };
+        final Button play=button("تشغيل المحاكاة",true,()->{});body.addView(play);
+        final Runnable[] tick=new Runnable[1];tick[0]=()->{if(!running[0]||fixtureDialog==null||!fixtureDialog.isShowing())return;if(count[0]<segments.length()){count[0]++;refresh.run();}if(count[0]<segments.length())handler.postDelayed(tick[0],1800);else{running[0]=false;play.setText("إعادة التشغيل");}};
+        play.setOnClickListener(v->{if(running[0]){running[0]=false;handler.removeCallbacks(tick[0]);play.setText("متابعة المحاكاة");}else{if(count[0]>=segments.length())count[0]=0;running[0]=true;play.setText("إيقاف المحاكاة مؤقتًا");tick[0].run();}});
+        body.addView(button("المقطع التالي",false,()->{running[0]=false;handler.removeCallbacks(tick[0]);if(count[0]<segments.length())count[0]++;refresh.run();play.setText("متابعة المحاكاة");}));
+        body.addView(button("إعادة ضبط القائمة",false,()->{running[0]=false;handler.removeCallbacks(tick[0]);count[0]=0;refresh.run();play.setText("تشغيل المحاكاة");}));
+        ScrollView scroll=new ScrollView(this);scroll.addView(body);fixtureDialog=new AlertDialog.Builder(this).setTitle("محاكاة قائمة المتحدثين").setView(scroll).setPositiveButton("إغلاق",null).create();fixtureDialog.setOnDismissListener(d->{running[0]=false;handler.removeCallbacks(tick[0]);fixtureDialog=null;});refresh.run();fixtureDialog.show();
+    }
+
+    private String fixtureConditions(JSONObject meeting,String id){
+        JSONObject fixture=meeting.optJSONObject("_fixture");JSONArray events=fixture==null?null:fixture.optJSONArray("events");if(events==null)return "";
+        for(int i=0;i<events.length();i++){
+            JSONObject event=events.optJSONObject(i);if(event==null||!id.equals(event.optString("segment_id")))continue;
+            String kind=event.optString("condition"),noise="white".equals(kind)?"ضوضاء بيضاء":"pink".equals(kind)?"ضوضاء وردية":"room_chatter".equals(kind)?"أصوات خلفية مصطنعة":"impulse".equals(kind)?"ضوضاء نبضية":"مرجع نصي أو صوت نظيف";
+            return "ظروف مصطنعة: "+noise+(event.has("speech_gain_db")&&!event.isNull("speech_gain_db")?" · مستوى الإشارة الرقمي "+String.format(Locale.US,"%.0f",event.optDouble("speech_gain_db"))+" dB؛ لا يمثل مسافة مقاسة":"");
+        }return "";
+    }
+
+    private String codeNote(JSONObject meeting,String id){
+        JSONObject notes=meeting.optJSONObject("_code_notes"),note=notes==null?null:notes.optJSONObject(id);if(note==null)return "";
+        return ("decoded".equals(note.optString("status"))?"فك ترميز محلي باختيار المستخدم: "+note.optString("scheme")+"\nالناتج: "+note.optString("decoded_text"):"لم يمكن فك النص؛ الأصل محفوظ ولا يوجد إثبات آلي للتشفير")+"\nالأصل: "+note.optString("encoded_text")+"\nالتوثيق: "+note.optString("reason");
+    }
+
+    private void inspectCode(JSONObject segment){
+        if(analysisRunning)return;
+        String[] schemes={"base64","hex","morse","rot13","caesar","unknown"};String[] names={"Base64 — ترميز","Hex — ترميز سداسي","مورس — حروف لاتينية وأرقام","ROT13 — إحلال بسيط","قيصر — بإزاحة معلومة","غير معروف أو مفتاحه غير متوفر"};
+        LinearLayout body=new LinearLayout(this);body.setOrientation(LinearLayout.VERTICAL);body.setPadding(dp(18),0,dp(18),dp(12));body.addView(label("اختر طريقة معروفة للنص المكتوب أو الجزء المنسوخ منه. التنفيذ محلي ويحفظ الأصل مع المتحدث والوقت. لا يفك تشفيرًا حديثًا بلا مفتاح ولا يثبت أن كلامًا غير مفهوم مشفر.",13,MUTED,false));
+        Spinner scheme=new Spinner(this);scheme.setAdapter(new ArrayAdapter<String>(this,android.R.layout.simple_spinner_dropdown_item,names));body.addView(scheme);
+        EditText source=edit("النص المرمز",segment.optString("text"),false);source.setSingleLine(false);source.setMinLines(2);body.addView(source);
+        EditText shift=edit("إزاحة قيصر (0–25)","3",false);shift.setInputType(InputType.TYPE_CLASS_NUMBER);body.addView(shift);
+        EditText reason=edit("سبب اختيار الطريقة أو عدم إمكان الفك","تحديد يدوي؛ راجع النص والمرجع.",false);reason.setSingleLine(false);body.addView(reason);
+        ScrollView scroll=new ScrollView(this);scroll.addView(body);AlertDialog dialog=new AlertDialog.Builder(this).setTitle("فك وتوثيق النص").setView(scroll).setNegativeButton("إلغاء",null).setPositiveButton("فك وتوثيق",null).create();
+        dialog.setOnShowListener(d->dialog.getButton(AlertDialog.BUTTON_POSITIVE).setOnClickListener(v->{
+            String encoded=source.getText().toString(),why=reason.getText().toString().trim(),selected=schemes[scheme.getSelectedItemPosition()];
+            if(encoded.trim().isEmpty()||encoded.length()>20000){source.setError("أدخل نصًا من 1 إلى 20000 حرف.");return;}if(why.isEmpty()||why.length()>300){reason.setError("اكتب توثيقًا حتى 300 حرف.");return;}
+            try{
+                int amount=0;if("caesar".equals(selected)){try{amount=Integer.parseInt(shift.getText().toString());}catch(Exception ex){shift.setError("أدخل إزاحة من 0 إلى 25.");return;}if(amount<0||amount>25){shift.setError("أدخل إزاحة من 0 إلى 25.");return;}}
+                String decoded="unknown".equals(selected)?null:TextCodecs.decode(selected,encoded,amount);
+                JSONObject next=new JSONObject(result.toString()),notes=next.optJSONObject("_code_notes");if(notes==null)notes=new JSONObject();JSONObject note=new JSONObject();
+                note.put("segment_id",segment.getString("id"));note.put("speaker_id",segment.getString("speaker_id"));note.put("start",segment.getDouble("start"));note.put("end",segment.getDouble("end"));note.put("segment_text",segment.getString("text"));note.put("encoded_text",encoded);note.put("scheme",selected);note.put("shift",amount);note.put("status",decoded==null?"unresolved":"decoded");if(decoded!=null)note.put("decoded_text",decoded);note.put("reason",why);note.put("reviewed_by_user",true);
+                notes.put(segment.getString("id"),note);next.put("_code_notes",notes);commitEdit(next,true);dialog.dismiss();
+            }catch(IllegalArgumentException ex){source.setError(ex.getMessage());}catch(Exception ex){error(ex.getMessage());}
+        }));dialog.show();
     }
 
     private void showDemo() {

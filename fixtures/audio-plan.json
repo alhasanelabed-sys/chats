@@ -1,0 +1,411 @@
+{
+  "version": 1,
+  "seed": 20261010,
+  "notice_ar": "بيانات اصطناعية مرجعية وليست نتيجة تعرف آلي أو قياس لهوية حقيقية أو مسافة أو ميكروفون. مستويات القرب والبعد تعني تخفيفًا رقميًا فقط.",
+  "sample_rate": 16000,
+  "max_duration_seconds": 180,
+  "max_file_bytes": 24000000,
+  "speech_normalization_rms_dbfs": -20,
+  "speech_normalization_peak_ceiling_dbfs": -6,
+  "cases": [
+    {
+      "id": "recurring_six",
+      "fixture_id": "six-speakers-distance",
+      "duration_seconds": 144,
+      "language_policy": "Use ar if supported, otherwise explicitly declare en with authored English translations. --language ar/en selects explicitly.",
+      "speakers": [
+        {
+          "id": "synth_01",
+          "name": "أمينة (صوت اصطناعي ١)",
+          "pitch": 38,
+          "speed_wpm": 150,
+          "variant": "m1"
+        },
+        {
+          "id": "synth_02",
+          "name": "باسم (صوت اصطناعي ٢)",
+          "pitch": 62,
+          "speed_wpm": 155,
+          "variant": "f2"
+        },
+        {
+          "id": "synth_03",
+          "name": "جنى (صوت اصطناعي ٣)",
+          "pitch": 48,
+          "speed_wpm": 145,
+          "variant": "m3"
+        },
+        {
+          "id": "synth_04",
+          "name": "داود (صوت اصطناعي ٤)",
+          "pitch": 72,
+          "speed_wpm": 160,
+          "variant": "f3"
+        },
+        {
+          "id": "synth_05",
+          "name": "هالة (صوت اصطناعي ٥)",
+          "pitch": 55,
+          "speed_wpm": 150,
+          "variant": "m2"
+        },
+        {
+          "id": "synth_06",
+          "name": "زياد (صوت اصطناعي ٦)",
+          "pitch": 82,
+          "speed_wpm": 145,
+          "variant": "f4"
+        }
+      ],
+      "events": [
+        {
+          "id": "s01",
+          "speaker_id": "synth_01",
+          "start": 0.0,
+          "end": 9.0,
+          "speech_gain_db": -3,
+          "texts": {
+            "ar": "نبدأ اجتماع مراجعة النسخة التجريبية. نحتاج إلى خطة اختبار واضحة.",
+            "en": "We begin the review of the test version. We need a clear test plan."
+          }
+        },
+        {
+          "id": "s02",
+          "speaker_id": "synth_02",
+          "start": 11.0,
+          "end": 20.0,
+          "speech_gain_db": -9,
+          "texts": {
+            "ar": "سأراجع شاشة التسجيل وأرسل ملاحظاتي غدًا.",
+            "en": "I will review the recording screen and send my notes tomorrow."
+          }
+        },
+        {
+          "id": "s03",
+          "speaker_id": "synth_03",
+          "start": 22.0,
+          "end": 31.0,
+          "speech_gain_db": -18,
+          "texts": {
+            "ar": "اختبرت حفظ المحضر، ويحتاج البحث إلى تحسين.",
+            "en": "I tested saving the minutes. Search needs improvement."
+          }
+        },
+        {
+          "id": "s04",
+          "speaker_id": "synth_01",
+          "start": 33.0,
+          "end": 42.0,
+          "speech_gain_db": -3,
+          "texts": {
+            "ar": "نراجع الملاحظات قبل أن نقرر إطلاق النسخة.",
+            "en": "We will review the notes before deciding on the release."
+          }
+        },
+        {
+          "id": "s05",
+          "speaker_id": "synth_04",
+          "start": 44.0,
+          "end": 53.0,
+          "speech_gain_db": -24,
+          "texts": {
+            "ar": "انضممت الآن. سأفحص استيراد الملفات يوم الخميس.",
+            "en": "I have just joined. I will check file import on Thursday."
+          }
+        },
+        {
+          "id": "s06",
+          "speaker_id": "synth_02",
+          "start": 55.0,
+          "end": 64.0,
+          "speech_gain_db": -9,
+          "texts": {
+            "ar": "عدت إلى النقاش. سأضيف اختبار العودة بعد إيقاف التسجيل مؤقتًا.",
+            "en": "I am back. I will add a test for returning after a recording pause."
+          }
+        },
+        {
+          "id": "s07",
+          "speaker_id": "synth_05",
+          "start": 66.0,
+          "end": 75.0,
+          "speech_gain_db": -6,
+          "texts": {
+            "ar": "انضممت بعد البداية. واجهة الترجمة تحتاج إلى مراجعة النص الطويل.",
+            "en": "I joined late. The translation screen needs review for long text."
+          }
+        },
+        {
+          "id": "s08",
+          "speaker_id": "synth_03",
+          "start": 77.0,
+          "end": 86.0,
+          "speech_gain_db": -18,
+          "texts": {
+            "ar": "عدت. سأراجع البحث دون تحديد موعد تسليم.",
+            "en": "I am back. I will review search, with no deadline yet."
+          }
+        },
+        {
+          "id": "s09",
+          "speaker_id": "synth_01",
+          "start": 88.0,
+          "end": 97.0,
+          "speech_gain_db": -3,
+          "texts": {
+            "ar": "اتفقنا على تأجيل الإطلاق حتى مراجعة تقارير الاختبار.",
+            "en": "We agree to delay the release until we review the test reports."
+          }
+        },
+        {
+          "id": "s10",
+          "speaker_id": "synth_06",
+          "start": 99.0,
+          "end": 108.0,
+          "speech_gain_db": -21,
+          "texts": {
+            "ar": "انضممت متأخرًا. سأراجع تنسيق ملف PDF غدًا.",
+            "en": "I joined late. I will review the PDF layout tomorrow."
+          }
+        },
+        {
+          "id": "s11",
+          "speaker_id": "synth_04",
+          "start": 110.0,
+          "end": 119.0,
+          "speech_gain_db": -24,
+          "texts": {
+            "ar": "عدت. أؤكد أن موعد تقرير الاستيراد يوم الخميس.",
+            "en": "I am back. My import report is due on Thursday."
+          }
+        },
+        {
+          "id": "s12",
+          "speaker_id": "synth_06",
+          "start": 121.0,
+          "end": 130.0,
+          "speech_gain_db": -21,
+          "texts": {
+            "ar": "عدت مرة ثانية، وسأضمّن أسماء المتحدثين في مراجعة PDF.",
+            "en": "I am back again. My PDF review will include the speaker names."
+          }
+        },
+        {
+          "id": "s13",
+          "speaker_id": "synth_05",
+          "start": 132.0,
+          "end": 141.0,
+          "speech_gain_db": -6,
+          "texts": {
+            "ar": "عدت. كم لغة سنختبر في الجولة التالية؟",
+            "en": "I am back. How many languages will we test next?"
+          }
+        }
+      ],
+      "noise_variants": [
+        {
+          "id": "clean",
+          "kind": "none",
+          "rms_dbfs": null
+        },
+        {
+          "id": "white",
+          "kind": "white",
+          "rms_dbfs": -32
+        },
+        {
+          "id": "pink",
+          "kind": "pink",
+          "rms_dbfs": -32
+        },
+        {
+          "id": "room_chatter",
+          "kind": "room_chatter",
+          "rms_dbfs": -32
+        },
+        {
+          "id": "impulse",
+          "kind": "impulse",
+          "rms_dbfs": -23
+        }
+      ]
+    },
+    {
+      "id": "multilingual_eight",
+      "fixture_id": "multilingual-eight",
+      "duration_seconds": 121,
+      "language_policy": "Generate each language only when the engine lists its voice; skip unsupported languages with no substitute.",
+      "speakers": [
+        {
+          "id": "synth_01",
+          "name": "أمينة (صوت اصطناعي ١)",
+          "pitch": 40,
+          "speed_wpm": 145,
+          "variant": "m1"
+        },
+        {
+          "id": "synth_02",
+          "name": "باسم (صوت اصطناعي ٢)",
+          "pitch": 45,
+          "speed_wpm": 145,
+          "variant": "f2"
+        },
+        {
+          "id": "synth_03",
+          "name": "جنى (صوت اصطناعي ٣)",
+          "pitch": 50,
+          "speed_wpm": 145,
+          "variant": "m1"
+        },
+        {
+          "id": "synth_04",
+          "name": "داود (صوت اصطناعي ٤)",
+          "pitch": 55,
+          "speed_wpm": 145,
+          "variant": "f2"
+        },
+        {
+          "id": "synth_05",
+          "name": "هالة (صوت اصطناعي ٥)",
+          "pitch": 60,
+          "speed_wpm": 145,
+          "variant": "m1"
+        },
+        {
+          "id": "synth_06",
+          "name": "زياد (صوت اصطناعي ٦)",
+          "pitch": 65,
+          "speed_wpm": 145,
+          "variant": "f2"
+        },
+        {
+          "id": "synth_07",
+          "name": "صوت اصطناعي 7",
+          "pitch": 70,
+          "speed_wpm": 145,
+          "variant": "m1"
+        },
+        {
+          "id": "synth_08",
+          "name": "صوت اصطناعي 8",
+          "pitch": 75,
+          "speed_wpm": 145,
+          "variant": "f2"
+        }
+      ],
+      "events": [
+        {
+          "id": "s01",
+          "speaker_id": "synth_01",
+          "start": 0.0,
+          "end": 9.0,
+          "speech_gain_db": -6,
+          "language": "he",
+          "text": "נבדוק את הדוח מחר."
+        },
+        {
+          "id": "s02",
+          "speaker_id": "synth_02",
+          "start": 11.0,
+          "end": 20.0,
+          "speech_gain_db": -12,
+          "language": "ru",
+          "text": "Я проверю запись завтра."
+        },
+        {
+          "id": "s03",
+          "speaker_id": "synth_03",
+          "start": 22.0,
+          "end": 31.0,
+          "speech_gain_db": -18,
+          "language": "el",
+          "text": "Θα ελέγξω την αναφορά αύριο."
+        },
+        {
+          "id": "s04",
+          "speaker_id": "synth_04",
+          "start": 33.0,
+          "end": 42.0,
+          "speech_gain_db": -9,
+          "language": "uk",
+          "text": "Я перевірю переклад завтра."
+        },
+        {
+          "id": "s05",
+          "speaker_id": "synth_05",
+          "start": 44.0,
+          "end": 53.0,
+          "speech_gain_db": -15,
+          "language": "zh",
+          "text": "我明天会检查报告。"
+        },
+        {
+          "id": "s06",
+          "speaker_id": "synth_06",
+          "start": 55.0,
+          "end": 64.0,
+          "speech_gain_db": -21,
+          "language": "fa",
+          "text": "من فردا گزارش را بررسی می‌کنم."
+        },
+        {
+          "id": "s07",
+          "speaker_id": "synth_07",
+          "start": 66.0,
+          "end": 75.0,
+          "speech_gain_db": -12,
+          "language": "ur",
+          "text": "میں کل رپورٹ کا جائزہ لوں گا۔"
+        },
+        {
+          "id": "s08",
+          "speaker_id": "synth_08",
+          "start": 77.0,
+          "end": 86.0,
+          "speech_gain_db": -6,
+          "language": "ar",
+          "text": "سأراجع المحضر غدًا."
+        },
+        {
+          "id": "s09",
+          "speaker_id": "synth_01",
+          "start": 88.0,
+          "end": 97.0,
+          "speech_gain_db": -18,
+          "language": "he",
+          "text": "אין החלטה על מועד ההשקה."
+        },
+        {
+          "id": "s10",
+          "speaker_id": "synth_05",
+          "start": 99.0,
+          "end": 108.0,
+          "speech_gain_db": -9,
+          "language": "zh",
+          "text": "我们还没有决定发布日期。"
+        },
+        {
+          "id": "s11",
+          "speaker_id": "synth_08",
+          "start": 110.0,
+          "end": 119.0,
+          "speech_gain_db": -12,
+          "language": "ar",
+          "text": "يبقى موعد الإطلاق غير محدد."
+        }
+      ],
+      "noise_variants": [
+        {
+          "id": "clean",
+          "kind": "none",
+          "rms_dbfs": null
+        },
+        {
+          "id": "white",
+          "kind": "white",
+          "rms_dbfs": -32
+        }
+      ]
+    }
+  ]
+}

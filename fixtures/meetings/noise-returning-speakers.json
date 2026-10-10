@@ -1,0 +1,440 @@
+{
+  "title": "مثال اصطناعي: ضجيج وعودة متحدثين",
+  "language": "ar",
+  "duration_seconds": 110.0,
+  "speakers": [
+    {
+      "id": "synth_01",
+      "name": "أمينة (صوت اصطناعي ١)",
+      "matched_reference": false
+    },
+    {
+      "id": "synth_02",
+      "name": "باسم (صوت اصطناعي ٢)",
+      "matched_reference": false
+    },
+    {
+      "id": "synth_03",
+      "name": "جنى (صوت اصطناعي ٣)",
+      "matched_reference": false
+    },
+    {
+      "id": "synth_04",
+      "name": "داود (صوت اصطناعي ٤)",
+      "matched_reference": false
+    },
+    {
+      "id": "synth_05",
+      "name": "هالة (صوت اصطناعي ٥)",
+      "matched_reference": false
+    },
+    {
+      "id": "synth_06",
+      "name": "زياد (صوت اصطناعي ٦)",
+      "matched_reference": false
+    }
+  ],
+  "segments": [
+    {
+      "id": "s01",
+      "start": 0.0,
+      "end": 8.0,
+      "speaker_id": "synth_01",
+      "text": "نبدأ فحص اختلاف الضجيج الرقمي على النص نفسه."
+    },
+    {
+      "id": "s02",
+      "start": 10.0,
+      "end": 18.0,
+      "speaker_id": "synth_02",
+      "text": "سأراجع حفظ التسجيل غدًا."
+    },
+    {
+      "id": "s03",
+      "start": 20.0,
+      "end": 28.0,
+      "speaker_id": "synth_03",
+      "text": "سأراجع المحضر دون موعد محدد."
+    },
+    {
+      "id": "s04",
+      "start": 30.0,
+      "end": 38.0,
+      "speaker_id": "synth_01",
+      "text": "عدت إلى الحديث، ونؤجل الحكم على الجودة حتى التجربة الحقيقية."
+    },
+    {
+      "id": "s05",
+      "start": 40.0,
+      "end": 48.0,
+      "speaker_id": "synth_04",
+      "text": "انضممت الآن. أراجع تنسيق التقرير يوم الخميس."
+    },
+    {
+      "id": "s06",
+      "start": 50.0,
+      "end": 58.0,
+      "speaker_id": "synth_02",
+      "text": "عدت بالمعرف نفسه مع مستوى صوت أقل."
+    },
+    {
+      "id": "s07",
+      "start": 60.0,
+      "end": 68.0,
+      "speaker_id": "synth_05",
+      "text": "انضممت الآن وأقترح مراجعة عينات اللغات."
+    },
+    {
+      "id": "s08",
+      "start": 70.0,
+      "end": 78.0,
+      "speaker_id": "synth_06",
+      "text": "انضممت متأخرًا. ما الهاتف المستخدم في التجربة الحقيقية؟"
+    },
+    {
+      "id": "s09",
+      "start": 80.0,
+      "end": 88.0,
+      "speaker_id": "synth_04",
+      "text": "عدت بالمعرف نفسه بعد الفاصل."
+    },
+    {
+      "id": "s10",
+      "start": 90.0,
+      "end": 98.0,
+      "speaker_id": "synth_06",
+      "text": "عدت. لم نقس مسافة حقيقية في هذه العينة."
+    },
+    {
+      "id": "s11",
+      "start": 100.0,
+      "end": 108.0,
+      "speaker_id": "synth_03",
+      "text": "عدت، ولا توجد نتيجة دقة آلية لهذه البيانات."
+    }
+  ],
+  "minutes": {
+    "summary": "توضح العينة شروط ضجيج وتخفيف رقمي مختلفة مع عودة المتحدثين. المهام المصرح بها هي مراجعة التسجيل والمحضر والتقرير. لا تثبت العينة دقة المزود أو مدى الميكروفون.",
+    "discussion_points": [
+      "ضجيج اصطناعي وتغير المستوى الرقمي",
+      "فحص هوية المتحدث المرجعية عند العودة"
+    ],
+    "decisions": [],
+    "action_items": [
+      {
+        "task": "مراجعة حفظ التسجيل",
+        "owner": "باسم (صوت اصطناعي ٢)",
+        "due_date": "غدًا",
+        "segment_ids": [
+          "s02"
+        ]
+      },
+      {
+        "task": "مراجعة المحضر",
+        "owner": "جنى (صوت اصطناعي ٣)",
+        "due_date": null,
+        "segment_ids": [
+          "s03"
+        ]
+      },
+      {
+        "task": "مراجعة تنسيق التقرير",
+        "owner": "داود (صوت اصطناعي ٤)",
+        "due_date": "الخميس",
+        "segment_ids": [
+          "s05"
+        ]
+      }
+    ],
+    "open_questions": [
+      "ما الهاتف المستخدم في التجربة الحقيقية؟"
+    ],
+    "speech_annotations": [
+      {
+        "segment_id": "s01",
+        "language": "ar",
+        "status": "clear",
+        "reason": "نص مرجعي واضح باللغة المحددة؛ لم يُستنتج من صوت حقيقي."
+      },
+      {
+        "segment_id": "s02",
+        "language": "ar",
+        "status": "clear",
+        "reason": "نص مرجعي واضح باللغة المحددة؛ لم يُستنتج من صوت حقيقي."
+      },
+      {
+        "segment_id": "s03",
+        "language": "ar",
+        "status": "clear",
+        "reason": "نص مرجعي واضح باللغة المحددة؛ لم يُستنتج من صوت حقيقي."
+      },
+      {
+        "segment_id": "s04",
+        "language": "ar",
+        "status": "clear",
+        "reason": "نص مرجعي واضح باللغة المحددة؛ لم يُستنتج من صوت حقيقي."
+      },
+      {
+        "segment_id": "s05",
+        "language": "ar",
+        "status": "clear",
+        "reason": "نص مرجعي واضح باللغة المحددة؛ لم يُستنتج من صوت حقيقي."
+      },
+      {
+        "segment_id": "s06",
+        "language": "ar",
+        "status": "clear",
+        "reason": "نص مرجعي واضح باللغة المحددة؛ لم يُستنتج من صوت حقيقي."
+      },
+      {
+        "segment_id": "s07",
+        "language": "ar",
+        "status": "clear",
+        "reason": "نص مرجعي واضح باللغة المحددة؛ لم يُستنتج من صوت حقيقي."
+      },
+      {
+        "segment_id": "s08",
+        "language": "ar",
+        "status": "clear",
+        "reason": "نص مرجعي واضح باللغة المحددة؛ لم يُستنتج من صوت حقيقي."
+      },
+      {
+        "segment_id": "s09",
+        "language": "ar",
+        "status": "clear",
+        "reason": "نص مرجعي واضح باللغة المحددة؛ لم يُستنتج من صوت حقيقي."
+      },
+      {
+        "segment_id": "s10",
+        "language": "ar",
+        "status": "clear",
+        "reason": "نص مرجعي واضح باللغة المحددة؛ لم يُستنتج من صوت حقيقي."
+      },
+      {
+        "segment_id": "s11",
+        "language": "ar",
+        "status": "clear",
+        "reason": "نص مرجعي واضح باللغة المحددة؛ لم يُستنتج من صوت حقيقي."
+      }
+    ]
+  },
+  "_demo": true,
+  "_fixture": {
+    "id": "noise-returning-speakers",
+    "version": 1,
+    "synthetic": true,
+    "notice_ar": "بيانات اصطناعية مرجعية وليست نتيجة تعرف آلي أو قياس لهوية حقيقية أو مسافة أو ميكروفون. مستويات القرب والبعد تعني تخفيفًا رقميًا فقط.",
+    "content_kind": "manually_authored_reference_not_provider_output",
+    "identity_claim": "no_real_person_identification",
+    "distance_claim": "digital_attenuation_only_no_measured_metres",
+    "expected_speaker_count": 6,
+    "expected_roster": [
+      {
+        "speaker_id": "synth_01",
+        "first_seen_seconds": 0.0,
+        "first_segment_id": "s01",
+        "segment_ids": [
+          "s01",
+          "s04"
+        ],
+        "return_segment_ids": [
+          "s04"
+        ],
+        "truth_source": "scripted_synthetic_label"
+      },
+      {
+        "speaker_id": "synth_02",
+        "first_seen_seconds": 10.0,
+        "first_segment_id": "s02",
+        "segment_ids": [
+          "s02",
+          "s06"
+        ],
+        "return_segment_ids": [
+          "s06"
+        ],
+        "truth_source": "scripted_synthetic_label"
+      },
+      {
+        "speaker_id": "synth_03",
+        "first_seen_seconds": 20.0,
+        "first_segment_id": "s03",
+        "segment_ids": [
+          "s03",
+          "s11"
+        ],
+        "return_segment_ids": [
+          "s11"
+        ],
+        "truth_source": "scripted_synthetic_label"
+      },
+      {
+        "speaker_id": "synth_04",
+        "first_seen_seconds": 40.0,
+        "first_segment_id": "s05",
+        "segment_ids": [
+          "s05",
+          "s09"
+        ],
+        "return_segment_ids": [
+          "s09"
+        ],
+        "truth_source": "scripted_synthetic_label"
+      },
+      {
+        "speaker_id": "synth_05",
+        "first_seen_seconds": 60.0,
+        "first_segment_id": "s07",
+        "segment_ids": [
+          "s07"
+        ],
+        "return_segment_ids": [],
+        "truth_source": "scripted_synthetic_label"
+      },
+      {
+        "speaker_id": "synth_06",
+        "first_seen_seconds": 70.0,
+        "first_segment_id": "s08",
+        "segment_ids": [
+          "s08",
+          "s10"
+        ],
+        "return_segment_ids": [
+          "s10"
+        ],
+        "truth_source": "scripted_synthetic_label"
+      }
+    ],
+    "events": [
+      {
+        "segment_id": "s01",
+        "speaker_id": "synth_01",
+        "start": 0.0,
+        "end": 8.0,
+        "language": "ar",
+        "speech_gain_db": -3,
+        "condition": "clean"
+      },
+      {
+        "segment_id": "s02",
+        "speaker_id": "synth_02",
+        "start": 10.0,
+        "end": 18.0,
+        "language": "ar",
+        "speech_gain_db": -9,
+        "condition": "white"
+      },
+      {
+        "segment_id": "s03",
+        "speaker_id": "synth_03",
+        "start": 20.0,
+        "end": 28.0,
+        "language": "ar",
+        "speech_gain_db": -18,
+        "condition": "pink"
+      },
+      {
+        "segment_id": "s04",
+        "speaker_id": "synth_01",
+        "start": 30.0,
+        "end": 38.0,
+        "language": "ar",
+        "speech_gain_db": -21,
+        "condition": "room_chatter"
+      },
+      {
+        "segment_id": "s05",
+        "speaker_id": "synth_04",
+        "start": 40.0,
+        "end": 48.0,
+        "language": "ar",
+        "speech_gain_db": -24,
+        "condition": "impulse"
+      },
+      {
+        "segment_id": "s06",
+        "speaker_id": "synth_02",
+        "start": 50.0,
+        "end": 58.0,
+        "language": "ar",
+        "speech_gain_db": -24,
+        "condition": "room_chatter"
+      },
+      {
+        "segment_id": "s07",
+        "speaker_id": "synth_05",
+        "start": 60.0,
+        "end": 68.0,
+        "language": "ar",
+        "speech_gain_db": -12,
+        "condition": "white"
+      },
+      {
+        "segment_id": "s08",
+        "speaker_id": "synth_06",
+        "start": 70.0,
+        "end": 78.0,
+        "language": "ar",
+        "speech_gain_db": -18,
+        "condition": "pink"
+      },
+      {
+        "segment_id": "s09",
+        "speaker_id": "synth_04",
+        "start": 80.0,
+        "end": 88.0,
+        "language": "ar",
+        "speech_gain_db": -6,
+        "condition": "clean"
+      },
+      {
+        "segment_id": "s10",
+        "speaker_id": "synth_06",
+        "start": 90.0,
+        "end": 98.0,
+        "language": "ar",
+        "speech_gain_db": -24,
+        "condition": "impulse"
+      },
+      {
+        "segment_id": "s11",
+        "speaker_id": "synth_03",
+        "start": 100.0,
+        "end": 108.0,
+        "language": "ar",
+        "speech_gain_db": -9,
+        "condition": "room_chatter"
+      }
+    ],
+    "expected_behavior_ar": [
+      "عدّ المتحدث عند ظهوره الأول فقط مع الحفاظ على معرفه عندما يعود.",
+      "لا تختلق قرارًا أو ترجمة من كلام غير قابل للتفسير.",
+      "هذه توقعات مرجعية، وليست إثباتًا لنجاح المزود."
+    ],
+    "noise_conditions": [
+      {
+        "id": "clean",
+        "target_noise_rms_dbfs": null
+      },
+      {
+        "id": "white",
+        "target_noise_rms_dbfs": -32
+      },
+      {
+        "id": "pink",
+        "target_noise_rms_dbfs": -32
+      },
+      {
+        "id": "room_chatter",
+        "target_noise_rms_dbfs": -32,
+        "kind": "overlapping_synthetic_TTS_not_real_room_recording"
+      },
+      {
+        "id": "impulse",
+        "target_noise_rms_dbfs": -23
+      }
+    ],
+    "audio_plan": "audio-plan.json#recurring_six",
+    "acoustic_claim": "No measured microphone distance, room impulse response or recognition accuracy."
+  }
+}

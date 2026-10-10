@@ -1,9 +1,10 @@
 #!/usr/bin/env python3
 """Exercise the installable APK through Android's accessibility hierarchy.
 
-This uses a fresh emulator and public Arabic UI controls, including Android's
-native recorder. It does not contact an analysis provider or measure physical
-microphone, transcription, speaker-recognition, or translation quality.
+This uses a fresh emulator and public Arabic UI controls for native recording,
+synthetic experiment references, and local text decoding. It does not contact
+an analysis provider or measure physical microphone, transcription,
+speaker-recognition, or translation quality.
 """
 
 import argparse
@@ -13,6 +14,7 @@ import re
 import subprocess
 import time
 import xml.etree.ElementTree as ET
+import zipfile
 from pathlib import Path
 
 
@@ -29,6 +31,8 @@ class Smoke:
         self.output.mkdir(parents=True, exist_ok=True)
         self.steps = []
         self.last_xml = None
+        self.fixture_entries = {}
+        self.fixtures = {}
 
     def adb(self, *args, binary=False, check=True):
         completed = subprocess.run(
@@ -152,19 +156,21 @@ class Smoke:
         (self.output / "steps.json").write_text(json.dumps(self.steps, ensure_ascii=False, indent=2), encoding="utf-8")
         print("PASS:", name, flush=True)
 
-    def replace_edit_text(self, value=CORRECTED_TEXT):
-        node = self.find(lambda item: item.get("class") == "android.widget.EditText", "edit dialog text field", scroll=False)
+    def replace_edit_text(self, value=CORRECTED_TEXT, node=None):
+        if node is None:
+            node = self.find(lambda item: item.get("class") == "android.widget.EditText", "edit dialog text field", scroll=False)
         self.tap_node(node)
         # Android 15 sends Ctrl+A to the focused native EditText. ASCII test
         # content avoids dependency on an emulator keyboard's Arabic layout.
         self.adb("shell", "input", "keycombination", "113", "29")
         self.adb("shell", "input", "keyevent", "67")
         self.adb("shell", "input", "text", value)
-        self.text(value, scroll=False)
+        field_has_value = lambda item: item.get("class") == "android.widget.EditText" and item.get("text") == value
+        self.find(field_has_value, "edited field value", scroll=False)
         input_method = self.adb("shell", "dumpsys", "input_method")
         if re.search(r"\b(?:mInputShown|mIsInputViewShown|isInputShown)=true\b", input_method):
             self.adb("shell", "input", "keyevent", "4")
-        self.text(value, scroll=False)
+        self.find(field_has_value, "edited field value after keyboard dismissal", scroll=False)
 
     def export_pdf(self):
         self.adb("shell", "rm", "-f", "/sdcard/Download/majlis-smoke.pdf")
@@ -324,7 +330,203 @@ class Smoke:
             raise AssertionError("Canceling test mode did not remove its saved conditions")
         self.record("21-documented-test-canceled")
 
+    def load_fixtures(self, apk):
+        # Read the exact reference shipped in the APK under test, avoiding a
+        # dependency on an independently edited checkout or generated audio.
+        with zipfile.ZipFile(apk) as archive:
+            index = json.loads(archive.read("assets/fixtures/index.json"))
+            if len(index.get("fixtures", [])) != 4:
+                raise AssertionError("The APK does not contain the four experiment references")
+            for entry in index["fixtures"]:
+                asset = entry["asset"]
+                if not re.fullmatch(r"fixtures/[a-z0-9-]+\.json", asset):
+                    raise AssertionError("Unexpected fixture asset path")
+                reference = json.loads(archive.read("assets/" + asset))
+                if reference.get("_fixture", {}).get("id") != entry["id"]:
+                    raise AssertionError("Fixture index/reference identity mismatch")
+                self.fixture_entries[entry["id"]] = entry
+                self.fixtures[entry["id"]] = reference
+
+    def button_below_title(self, title, button, titles):
+        """Select a repeated card button by its preceding accessible title."""
+        def belongs_to_title(node):
+            if node.get("text") != button:
+                return False
+            nearest_title = None
+            for item in self.last_xml.iter("node"):
+                if item is node:
+                    break
+                if item.get("text") in titles:
+                    nearest_title = item.get("text")
+            return nearest_title == title
+
+        return self.find(belongs_to_title, button + " for " + title)
+
+    def open_fixture(self, fixture_id):
+        self.tap("الاجتماع")
+        self.tap("مختبر المتحدثين واللغات والضوضاء")
+        self.text("مختبر قابل لإعادة التجربة")
+        title = self.fixture_entries[fixture_id]["title"]
+        titles = {entry["title"] for entry in self.fixture_entries.values()}
+        self.tap_node(self.button_below_title(title, "فتح مرجع التجربة", titles))
+        self.text(title)
+        self.text(self.fixtures[fixture_id]["_fixture"]["notice_ar"])
+
+    @staticmethod
+    def formatted_time(seconds):
+        value = int(seconds)
+        return f"{value // 60:02d}:{value % 60:02d}"
+
+    def fixture_roster(self):
+        self.open_fixture("six-speakers-distance")
+        self.record("23-synthetic-reference-opened")
+        fixture = self.fixtures["six-speakers-distance"]
+        segments = fixture["segments"]
+        speakers = {speaker["id"]: speaker["name"] for speaker in fixture["speakers"]}
+        expected_roster = fixture["_fixture"]["expected_roster"]
+        if len(speakers) != 6 or len(segments) != 13:
+            raise AssertionError("The roster scenario needs six speakers and thirteen reference turns")
+        self.tap("محاكاة ظهور المتحدثين وعودتهم")
+        self.text("محاكاة قائمة المتحدثين", scroll=False)
+        self.text("لم يبدأ أحد الكلام بعد")
+        self.text("القائمة: 0 / 6 متحدثين", partial=True)
+        observed = []
+        for count in range(1, 14):
+            self.tap("المقطع التالي")
+            segment = segments[count - 1]
+            expected = next(item for item in expected_roster if item["speaker_id"] == segment["speaker_id"])
+            first_appearance = segment["id"] == expected["first_segment_id"]
+            event = ("إضافة متحدث إلى القائمة: " if first_appearance else "عودة متحدث مسجل: ")
+            event += speakers[segment["speaker_id"]] + " · " + self.formatted_time(segment["start"])
+            event += f" · {count}/{len(segments)}"
+            self.text(event)
+            seen = {item["speaker_id"] for item in segments[:count]}
+            roster = self.text(f"القائمة: {len(seen)} / 6 متحدثين", partial=True).get("text")
+            expected_lines = [f"القائمة: {len(seen)} / 6 متحدثين"]
+            for entry in expected_roster:
+                if entry["speaker_id"] not in seen:
+                    continue
+                turns = sum(item["speaker_id"] == entry["speaker_id"] for item in segments[:count])
+                expected_lines.append(
+                    speakers[entry["speaker_id"]] + " · أول كلام "
+                    + self.formatted_time(entry["first_seen_seconds"]) + f" · مرات الكلام {turns}"
+                )
+            if roster.splitlines() != expected_lines:
+                raise AssertionError("The simulated roster duplicated, renamed, or lost a returning identity")
+            observed.append({
+                "segment_id": segment["id"], "speaker_id": segment["speaker_id"],
+                "first_appearance": first_appearance, "roster_count": len(seen), "visible_roster": roster,
+            })
+            if count in (1, 4, 5, 10, 12, 13):
+                self.record(f"24-roster-segment-{count:02d}")
+        if observed[9]["roster_count"] != 6 or observed[11]["first_appearance"]:
+            raise AssertionError("The fixture did not demonstrate six identities and the late identity returning")
+        if {item["speaker_id"] for item in observed if not item["first_appearance"]} != set(speakers):
+            raise AssertionError("The fixture did not demonstrate all six speaker identities returning")
+        (self.output / "synthetic-roster-results.json").write_text(json.dumps({
+            "fixture_id": fixture["_fixture"]["id"], "source": "packaged_synthetic_reference",
+            "provider_recognition_measured": False, "steps": observed,
+        }, ensure_ascii=False, indent=2), encoding="utf-8")
+        self.tap("إعادة ضبط القائمة")
+        self.text("لم يبدأ أحد الكلام بعد")
+        self.text("القائمة: 0 / 6 متحدثين", partial=True)
+        self.record("25-roster-reset")
+        self.tap("إغلاق")
+
+    def filter_transcript(self, query):
+        field = self.find(
+            lambda item: item.get("class") == "android.widget.EditText"
+            and item.get("package") == PACKAGE,
+            "transcript search field",
+        )
+        self.replace_edit_text(query, node=field)
+
+    def saved_fixture(self, fixture_id):
+        names = self.adb("exec-out", "run-as", PACKAGE, "ls", "files/meetings").splitlines()
+        for name in names:
+            if not re.fullmatch(r"[A-Za-z0-9_-]+\.json", name):
+                continue
+            meeting = json.loads(self.adb("exec-out", "run-as", PACKAGE, "cat", "files/meetings/" + name))
+            if meeting.get("_fixture", {}).get("id") == fixture_id:
+                return meeting
+        raise AssertionError("The fixture edits were not saved in app-private history")
+
+    def fixture_decoders(self):
+        fixture_id = "unknown-and-ciphers"
+        self.open_fixture(fixture_id)
+        fixture = self.fixtures[fixture_id]
+        examples = fixture["_fixture"]["encoding_examples"]
+        known = next(item for item in examples if item["method"] == "base64")
+        unknown = next(item for item in examples if item["method"] == "unknown")
+        if known["expected_plaintext"] != "راجع التقرير غدًا" or unknown["expected_plaintext"] is not None:
+            raise AssertionError("The decoder fixture lost its explicit known/unknown contract")
+
+        self.filter_transcript(known["input"])
+        self.text(known["input"])
+        # Save through the native UI first, so both later decoder operations
+        # must commit to history and survive activity/process recreation.
+        self.tap("حفظ المثال التجريبي")
+        self.tap("فك ترميز النص أو توثيق عدم فهمه")
+        self.text("فك وتوثيق النص", scroll=False)
+        self.text("Base64 — ترميز")
+        self.text(known["input"])
+        self.tap("فك وتوثيق")
+        self.text("الناتج: " + known["expected_plaintext"], partial=True)
+        self.record("26-local-base64-decoded")
+
+        # Keep the original Unicode source in the native dialog. Search by a
+        # unique ASCII token because adb input text has no Unicode IME support.
+        self.filter_transcript("7QX9")
+        self.text(unknown["input"])
+        self.tap("فك ترميز النص أو توثيق عدم فهمه")
+        self.text("فك وتوثيق النص", scroll=False)
+        self.text(unknown["input"])
+        self.tap("Base64 — ترميز")
+        self.tap("غير معروف أو مفتاحه غير متوفر")
+        self.tap("فك وتوثيق")
+        self.text("لم يمكن فك النص؛ الأصل محفوظ ولا يوجد إثبات آلي للتشفير", partial=True)
+        self.text("الأصل: " + unknown["input"], partial=True)
+        self.record("27-unknown-source-preserved")
+
+        saved = self.saved_fixture(fixture_id)
+        if saved["segments"] != fixture["segments"] or saved["speakers"] != fixture["speakers"]:
+            raise AssertionError("Local decoding changed the source transcript or speaker identities")
+        notes = saved.get("_code_notes", {})
+        for example in (known, unknown):
+            source = next(item for item in fixture["segments"] if item["id"] == example["segment_id"])
+            note = notes.get(source["id"], {})
+            for field in ("speaker_id", "start", "end"):
+                if note.get(field) != source[field]:
+                    raise AssertionError("A decoder note lost its source speaker/timing: " + field)
+            if (note.get("segment_id") != source["id"] or note.get("segment_text") != source["text"]
+                    or note.get("encoded_text") != example["input"] or note.get("scheme") != example["method"]
+                    or note.get("reviewed_by_user") is not True or not note.get("reason")):
+                raise AssertionError("A decoder note lost its original text or explicit user choice")
+            if example["method"] == "base64":
+                if note.get("status") != "decoded" or note.get("decoded_text") != example["expected_plaintext"]:
+                    raise AssertionError("The local Base64 result did not match the known reference")
+            elif note.get("status") != "unresolved" or "decoded_text" in note:
+                raise AssertionError("The unknown source received an invented decoded result")
+        (self.output / "fixture-decoder-persisted.json").write_text(
+            json.dumps(saved, ensure_ascii=False, indent=2), encoding="utf-8"
+        )
+
+        self.adb("shell", "am", "force-stop", PACKAGE)
+        self.adb("shell", "am", "start", "-W", "-n", COMPONENT)
+        self.tap("المحاضر")
+        titles = {DEMO_TITLE, fixture["title"]}
+        self.tap_node(self.button_below_title(fixture["title"], "فتح المحضر", titles))
+        self.tap("النص الكامل")
+        self.filter_transcript(known["input"])
+        self.text("الناتج: " + known["expected_plaintext"], partial=True)
+        self.record("28-decoded-note-after-restart")
+        self.filter_transcript("7QX9")
+        self.text("لم يمكن فك النص؛ الأصل محفوظ ولا يوجد إثبات آلي للتشفير", partial=True)
+        self.text("الأصل: " + unknown["input"], partial=True)
+        self.record("29-unknown-note-after-restart")
+
     def run(self, apk):
+        self.load_fixtures(apk)
         self.adb("wait-for-device")
         self.adb("install", "-r", "-g", str(apk))
         self.adb("shell", "pm", "clear", PACKAGE)
@@ -385,6 +587,11 @@ class Smoke:
         self.text("اجتماع جديد")
         self.documented_test_mode()
         self.record("22-return-to-meeting")
+        self.fixture_roster()
+        self.fixture_decoders()
+        self.tap("الاجتماع")
+        self.text("اجتماع جديد")
+        self.record("30-return-after-fixture-experiments")
 
     def logs(self):
         full = self.adb("logcat", "-d", "-v", "threadtime")
@@ -413,7 +620,7 @@ def main():
         raise
     finally:
         smoke.logs()
-    print("Android UI and native AAC recording smoke passed; live analysis and physical microphone/AI quality were not exercised.")
+    print("Android UI, native AAC recording, synthetic roster and local decoder smoke passed; live analysis and physical microphone/AI quality were not exercised.")
 
 
 if __name__ == "__main__":

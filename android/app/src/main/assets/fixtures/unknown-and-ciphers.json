@@ -1,0 +1,389 @@
+{
+  "title": "مثال اصطناعي: غير مفهوم وترميز معلوم ومجهول",
+  "language": "ar",
+  "duration_seconds": 81.0,
+  "speakers": [
+    {
+      "id": "synth_01",
+      "name": "أمينة (صوت اصطناعي ١)",
+      "matched_reference": false
+    },
+    {
+      "id": "synth_02",
+      "name": "باسم (صوت اصطناعي ٢)",
+      "matched_reference": false
+    },
+    {
+      "id": "synth_03",
+      "name": "جنى (صوت اصطناعي ٣)",
+      "matched_reference": false
+    },
+    {
+      "id": "synth_04",
+      "name": "داود (صوت اصطناعي ٤)",
+      "matched_reference": false
+    },
+    {
+      "id": "synth_05",
+      "name": "هالة (صوت اصطناعي ٥)",
+      "matched_reference": false
+    },
+    {
+      "id": "synth_06",
+      "name": "زياد (صوت اصطناعي ٦)",
+      "matched_reference": false
+    }
+  ],
+  "segments": [
+    {
+      "id": "s01",
+      "start": 0.0,
+      "end": 7.0,
+      "speaker_id": "synth_01",
+      "text": "هذه عينة نصوص مرمزة معلومة الطريقة، وليست سرًا حقيقيًا."
+    },
+    {
+      "id": "s02",
+      "start": 9.0,
+      "end": 16.0,
+      "speaker_id": "synth_02",
+      "text": "2LHYp9is2Lkg2KfZhNiq2YLYsdmK2LEg2LrYr9mL2Kc="
+    },
+    {
+      "id": "s03",
+      "start": 18.0,
+      "end": 25.0,
+      "speaker_id": "synth_03",
+      "text": "d8aad98520d8a7d8b9d8aad985d8a7d8af20d8a7d984d8aed8b7d8a9"
+    },
+    {
+      "id": "s04",
+      "start": 27.0,
+      "end": 34.0,
+      "speaker_id": "synth_02",
+      "text": "Erivrj gur ercbeg gbzbeebj."
+    },
+    {
+      "id": "s05",
+      "start": 36.0,
+      "end": 43.0,
+      "speaker_id": "synth_04",
+      "text": "PHHW DW QRRQ"
+    },
+    {
+      "id": "s06",
+      "start": 45.0,
+      "end": 52.0,
+      "speaker_id": "synth_05",
+      "text": "⟐⟟ :: 7QX9 / ZM-42 :: ▧"
+    },
+    {
+      "id": "s07",
+      "start": 54.0,
+      "end": 61.0,
+      "speaker_id": "synth_06",
+      "text": "[كلام غير مفهوم؛ لا يوجد تفريغ موثوق]"
+    },
+    {
+      "id": "s08",
+      "start": 63.0,
+      "end": 70.0,
+      "speaker_id": "synth_01",
+      "text": "لا نستنتج معنى السلسلة المجهولة ولا نعتمدها كقرار."
+    },
+    {
+      "id": "s09",
+      "speaker_id": "synth_03",
+      "start": 72.0,
+      "end": 79.0,
+      "text": "... --- ... / .---- ..--- ...--"
+    }
+  ],
+  "minutes": {
+    "summary": "توضح العينة الفرق بين نص معروف الترميز وسلسلة مجهولة وكلام لا يملك تفريغًا موثوقًا. لا توجد قرارات أو مهام مثبتة من المقاطع غير القابلة للتفسير.",
+    "discussion_points": [
+      "الترميز المعلوم له مرجع وطريقة صريحان",
+      "غير المفهوم لا يثبت تشفيرًا ولا معنى معينًا"
+    ],
+    "decisions": [],
+    "action_items": [],
+    "open_questions": [
+      "ما مصدر وطريقة السلسلة المجهولة؟"
+    ],
+    "speech_annotations": [
+      {
+        "segment_id": "s01",
+        "language": "ar",
+        "status": "clear",
+        "reason": "نص مرجعي واضح باللغة المحددة؛ لم يُستنتج من صوت حقيقي."
+      },
+      {
+        "segment_id": "s02",
+        "language": "unknown",
+        "status": "uninterpretable",
+        "reason": "اللغة أو المعنى غير مثبتين في المرجع؛ لا يثبت ذلك تشفيرًا."
+      },
+      {
+        "segment_id": "s03",
+        "language": "unknown",
+        "status": "uninterpretable",
+        "reason": "اللغة أو المعنى غير مثبتين في المرجع؛ لا يثبت ذلك تشفيرًا."
+      },
+      {
+        "segment_id": "s04",
+        "language": "unknown",
+        "status": "uninterpretable",
+        "reason": "اللغة أو المعنى غير مثبتين في المرجع؛ لا يثبت ذلك تشفيرًا."
+      },
+      {
+        "segment_id": "s05",
+        "language": "unknown",
+        "status": "uninterpretable",
+        "reason": "اللغة أو المعنى غير مثبتين في المرجع؛ لا يثبت ذلك تشفيرًا."
+      },
+      {
+        "segment_id": "s06",
+        "language": "unknown",
+        "status": "uninterpretable",
+        "reason": "اللغة أو المعنى غير مثبتين في المرجع؛ لا يثبت ذلك تشفيرًا."
+      },
+      {
+        "segment_id": "s07",
+        "language": "unknown",
+        "status": "uninterpretable",
+        "reason": "اللغة أو المعنى غير مثبتين في المرجع؛ لا يثبت ذلك تشفيرًا."
+      },
+      {
+        "segment_id": "s08",
+        "language": "ar",
+        "status": "clear",
+        "reason": "نص مرجعي واضح باللغة المحددة؛ لم يُستنتج من صوت حقيقي."
+      },
+      {
+        "segment_id": "s09",
+        "language": "unknown",
+        "status": "uninterpretable",
+        "reason": "نص مورس معلوم الطريقة في المرجع؛ لا يدل على لغة الصوت أو قرار اجتماع."
+      }
+    ]
+  },
+  "_demo": true,
+  "_fixture": {
+    "id": "unknown-and-ciphers",
+    "version": 1,
+    "synthetic": true,
+    "notice_ar": "بيانات اصطناعية مرجعية وليست نتيجة تعرف آلي أو قياس لهوية حقيقية أو مسافة أو ميكروفون. مستويات القرب والبعد تعني تخفيفًا رقميًا فقط.",
+    "content_kind": "manually_authored_reference_not_provider_output",
+    "identity_claim": "no_real_person_identification",
+    "distance_claim": "digital_attenuation_only_no_measured_metres",
+    "expected_speaker_count": 6,
+    "expected_roster": [
+      {
+        "speaker_id": "synth_01",
+        "first_seen_seconds": 0.0,
+        "first_segment_id": "s01",
+        "segment_ids": [
+          "s01",
+          "s08"
+        ],
+        "return_segment_ids": [
+          "s08"
+        ],
+        "truth_source": "scripted_synthetic_label"
+      },
+      {
+        "speaker_id": "synth_02",
+        "first_seen_seconds": 9.0,
+        "first_segment_id": "s02",
+        "segment_ids": [
+          "s02",
+          "s04"
+        ],
+        "return_segment_ids": [
+          "s04"
+        ],
+        "truth_source": "scripted_synthetic_label"
+      },
+      {
+        "speaker_id": "synth_03",
+        "first_seen_seconds": 18.0,
+        "first_segment_id": "s03",
+        "segment_ids": [
+          "s03",
+          "s09"
+        ],
+        "return_segment_ids": [
+          "s09"
+        ],
+        "truth_source": "scripted_synthetic_label"
+      },
+      {
+        "speaker_id": "synth_04",
+        "first_seen_seconds": 36.0,
+        "first_segment_id": "s05",
+        "segment_ids": [
+          "s05"
+        ],
+        "return_segment_ids": [],
+        "truth_source": "scripted_synthetic_label"
+      },
+      {
+        "speaker_id": "synth_05",
+        "first_seen_seconds": 45.0,
+        "first_segment_id": "s06",
+        "segment_ids": [
+          "s06"
+        ],
+        "return_segment_ids": [],
+        "truth_source": "scripted_synthetic_label"
+      },
+      {
+        "speaker_id": "synth_06",
+        "first_seen_seconds": 54.0,
+        "first_segment_id": "s07",
+        "segment_ids": [
+          "s07"
+        ],
+        "return_segment_ids": [],
+        "truth_source": "scripted_synthetic_label"
+      }
+    ],
+    "events": [
+      {
+        "segment_id": "s01",
+        "speaker_id": "synth_01",
+        "start": 0.0,
+        "end": 7.0,
+        "language": "ar",
+        "speech_gain_db": -6,
+        "condition": "text_only"
+      },
+      {
+        "segment_id": "s02",
+        "speaker_id": "synth_02",
+        "start": 9.0,
+        "end": 16.0,
+        "language": "unknown",
+        "speech_gain_db": null,
+        "condition": "text_only_known_encoding"
+      },
+      {
+        "segment_id": "s03",
+        "speaker_id": "synth_03",
+        "start": 18.0,
+        "end": 25.0,
+        "language": "unknown",
+        "speech_gain_db": null,
+        "condition": "text_only_known_encoding"
+      },
+      {
+        "segment_id": "s04",
+        "speaker_id": "synth_02",
+        "start": 27.0,
+        "end": 34.0,
+        "language": "unknown",
+        "speech_gain_db": null,
+        "condition": "text_only_known_encoding"
+      },
+      {
+        "segment_id": "s05",
+        "speaker_id": "synth_04",
+        "start": 36.0,
+        "end": 43.0,
+        "language": "unknown",
+        "speech_gain_db": null,
+        "condition": "text_only_known_encoding"
+      },
+      {
+        "segment_id": "s06",
+        "speaker_id": "synth_05",
+        "start": 45.0,
+        "end": 52.0,
+        "language": "unknown",
+        "speech_gain_db": null,
+        "condition": "text_only_unknown_method"
+      },
+      {
+        "segment_id": "s07",
+        "speaker_id": "synth_06",
+        "start": 54.0,
+        "end": 61.0,
+        "language": "unknown",
+        "speech_gain_db": -24,
+        "condition": "uninterpretable_reference"
+      },
+      {
+        "segment_id": "s08",
+        "speaker_id": "synth_01",
+        "start": 63.0,
+        "end": 70.0,
+        "language": "ar",
+        "speech_gain_db": -6,
+        "condition": "text_only"
+      },
+      {
+        "segment_id": "s09",
+        "speaker_id": "synth_03",
+        "start": 72.0,
+        "end": 79.0,
+        "language": "unknown",
+        "speech_gain_db": null,
+        "condition": "text_only_known_encoding"
+      }
+    ],
+    "expected_behavior_ar": [
+      "عدّ المتحدث عند ظهوره الأول فقط مع الحفاظ على معرفه عندما يعود.",
+      "لا تختلق قرارًا أو ترجمة من كلام غير قابل للتفسير.",
+      "هذه توقعات مرجعية، وليست إثباتًا لنجاح المزود."
+    ],
+    "audio_available": false,
+    "encoding_examples": [
+      {
+        "segment_id": "s02",
+        "method": "base64",
+        "input": "2LHYp9is2Lkg2KfZhNiq2YLYsdmK2LEg2LrYr9mL2Kc=",
+        "expected_plaintext": "راجع التقرير غدًا",
+        "options": {}
+      },
+      {
+        "segment_id": "s03",
+        "method": "hex",
+        "input": "d8aad98520d8a7d8b9d8aad985d8a7d8af20d8a7d984d8aed8b7d8a9",
+        "expected_plaintext": "تم اعتماد الخطة",
+        "options": {}
+      },
+      {
+        "segment_id": "s04",
+        "method": "rot13",
+        "input": "Erivrj gur ercbeg gbzbeebj.",
+        "expected_plaintext": "Review the report tomorrow.",
+        "options": {}
+      },
+      {
+        "segment_id": "s05",
+        "method": "caesar",
+        "input": "PHHW DW QRRQ",
+        "expected_plaintext": "MEET AT NOON",
+        "options": {
+          "shift": 3
+        }
+      },
+      {
+        "segment_id": "s09",
+        "method": "morse",
+        "input": "... --- ... / .---- ..--- ...--",
+        "expected_plaintext": "SOS 123",
+        "options": {}
+      },
+      {
+        "segment_id": "s06",
+        "method": "unknown",
+        "input": "⟐⟟ :: 7QX9 / ZM-42 :: ▧",
+        "expected_plaintext": null,
+        "options": {}
+      }
+    ],
+    "expected_decoder_ar": "يُفك الترميز النصي المعلوم محليًا بالطريقة الصريحة فقط. تبقى السلسلة المجهولة بلا نتيجة. هذا لا يفك تشفير الصوت.",
+    "known_encoding_is_confidentiality": false
+  }
+}

@@ -68,6 +68,10 @@ PY
 
 "$BUILD_TOOLS_DIR/aapt2" compile \
     --dir "$SOURCE_DIR/res" -o "$BUILD_DIR/resources.zip"
+asset_args=()
+if [[ -d "$SOURCE_DIR/assets" ]]; then
+    asset_args=(-A "$SOURCE_DIR/assets")
+fi
 "$BUILD_TOOLS_DIR/aapt2" link \
     -o "$BUILD_DIR/unsigned.apk" \
     -I "$PLATFORM_JAR" \
@@ -75,6 +79,7 @@ PY
     --java "$BUILD_DIR/generated" \
     --min-sdk-version 26 --target-sdk-version 35 \
     --version-code "$VERSION_CODE" --version-name "$VERSION_NAME" \
+    "${asset_args[@]}" \
     "$BUILD_DIR/resources.zip"
 
 java_sources=()
@@ -143,7 +148,7 @@ for attribute, expected in (
 ):
     if package_attributes.get(attribute) != expected:
         mismatch(f"{attribute}={expected}")
-for label, expected in (("sdkVersion", "26"), ("targetSdkVersion", "35")):
+for label, expected in (("(?:minSdkVersion|sdkVersion)", "26"), ("targetSdkVersion", "35")):
     value = re.search(r"^\s*" + label + r"\s*:\s*['\"]?(\d+)['\"]?\s*$", metadata, re.MULTILINE)
     if value is None or value.group(1) != expected:
         mismatch(f"{label}={expected}")
