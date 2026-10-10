@@ -1,0 +1,163 @@
+{
+  "status": "passed",
+  "started_at_utc": "2026-10-10T08:51:14.155Z",
+  "checks": [
+    "real admin login and navigation",
+    "20 employees/2 terminals/2 days/80 punches validated",
+    "real concurrent simulated ingestion",
+    "CSV and JSON attachment transfers",
+    "production writes persisted off",
+    "unchecked option preserved off setting",
+    "Arabic RTL/English LTR",
+    "390px layout without overflow",
+    "real worker cancellation",
+    "confirmed completed-trial deletion",
+    "production employee/punch fully unchanged",
+    "server and disposable database removed"
+  ],
+  "console_errors": [],
+  "completed_job_id": "6159de8bfe714d7dab2f450418790360",
+  "completed_result": {
+    "status": "passed",
+    "started_at_utc": "2026-10-10T08:51:17.461209+00:00",
+    "environment": {
+      "python": "3.12.14",
+      "platform": "Linux-6.18.44-x86_64-with-glibc2.41",
+      "cpu_count": 3
+    },
+    "isolated_temporary_database": true,
+    "physical_devices_verified": false,
+    "tcp_write_back": false,
+    "employees": 20,
+    "devices": 2,
+    "days": 2,
+    "repeat": 1,
+    "version": "1.3.0",
+    "punches": 80,
+    "options": {
+      "employees": 20,
+      "devices": 2,
+      "days": 2,
+      "repeat": 1,
+      "export_csv": true,
+      "ingestion": true,
+      "keep_write_off": true
+    },
+    "date_range": {
+      "start": "2026-10-07",
+      "end": "2026-10-08"
+    },
+    "seed_seconds": 0.130859,
+    "reports": {
+      "transactions": {
+        "median_seconds": 0.010206,
+        "min_seconds": 0.010206,
+        "max_seconds": 0.010206,
+        "samples_seconds": [
+          0.010206
+        ],
+        "total": 80,
+        "page_size": 80,
+        "validation": "passed"
+      },
+      "summary": {
+        "median_seconds": 0.010356,
+        "min_seconds": 0.010356,
+        "max_seconds": 0.010356,
+        "samples_seconds": [
+          0.010356
+        ],
+        "total": 20,
+        "page_size": 20,
+        "validation": "passed"
+      },
+      "daily": {
+        "median_seconds": 0.01161,
+        "min_seconds": 0.01161,
+        "max_seconds": 0.01161,
+        "samples_seconds": [
+          0.01161
+        ],
+        "total": 40,
+        "page_size": 40,
+        "validation": "passed"
+      },
+      "calculation_probe_employee_codes": [
+        "1",
+        "20"
+      ]
+    },
+    "export": {
+      "seconds": 0.00482,
+      "size_bytes": 5387,
+      "data_rows": 80,
+      "rows_including_header": 81,
+      "validation_seconds": 0.00065,
+      "validation": "passed",
+      "temporary_csv_removed_on_exit": false,
+      "retained_csv": true,
+      "filename": "transactions.csv"
+    },
+    "ingestion": {
+      "seconds": 0.036848,
+      "parallel_devices": 2,
+      "requests": 2,
+      "http_200_replies": 2,
+      "reuploaded_records": 40,
+      "punches_before": 80,
+      "punches_after": 80,
+      "request_latency": {
+        "median_seconds": 0.03387,
+        "min_seconds": 0.031917,
+        "max_seconds": 0.035823,
+        "samples_seconds": [
+          0.031917,
+          0.035823
+        ]
+      },
+      "validation": "passed",
+      "physical_devices_verified": false
+    },
+    "total_seconds": 0.997228
+  },
+  "csv_download": {
+    "filename": "experiment_6159de8b.csv",
+    "bytes": 5387,
+    "rows_including_header": 81
+  },
+  "json_download": {
+    "filename": "experiment_6159de8b.json",
+    "bytes": 2281,
+    "status": "passed"
+  },
+  "cancelled_job": {
+    "id": "fe0252b85b1946bcac1f3aaf6df152e8",
+    "status": "cancelled",
+    "deleted": true
+  },
+  "sentinel": {
+    "before": {
+      "counts": {
+        "employee": 1,
+        "transaction": 1,
+        "device": 0
+      },
+      "rows_sha256": "dd3369f0a24fdea0d94ed73e71e2f3899f353eb621e7d9231802872be4ad7015",
+      "write_back": true
+    },
+    "after": {
+      "counts": {
+        "employee": 1,
+        "transaction": 1,
+        "device": 0
+      },
+      "rows_sha256": "dd3369f0a24fdea0d94ed73e71e2f3899f353eb621e7d9231802872be4ad7015",
+      "write_back": false
+    },
+    "sentinel_unchanged": true,
+    "production_write_back_off": true,
+    "physical_terminals_configured": 0
+  },
+  "fixture_cleanup": true,
+  "total_seconds": 7.674
+}
