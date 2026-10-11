@@ -1,0 +1,16 @@
+; Copy to hader.ini and adjust. Environment variables HADER_<NAME> override these.
+[server]
+; address to listen on (0.0.0.0 = all network cards)
+host = 0.0.0.0
+; web interface
+web_port = 8090
+; employee portal only (the one port to open to the internet); 0 = off
+portal_port = 8091
+; ports the terminals push to (Menu > Comm. > Cloud Server Setting). Comma separated.
+; many installations use 8081, 80 or 90.
+adms_ports = 8081,90
+; database, photos and backups (relative to this folder)
+; data_dir = data   (default: C:\ProgramData\Hader on Windows — survives new versions)
+; a device is shown offline after this many seconds without contact
+offline_after = 120
+; database_url = sqlite:///C:/Hader/data/hader.db

@@ -1,0 +1,68 @@
+/* Isolated trial runs: scoped to this page. */
+.exp-page { display: grid; gap: 16px; }
+.exp-page h2, .exp-page h3 { margin: 0; }
+.exp-page .exp-intro { margin: 0; line-height: 1.8; color: var(--muted); }
+.exp-layout { display: grid; grid-template-columns: minmax(290px, 380px) minmax(0, 1fr); gap: 16px; align-items: start; }
+.exp-panel { padding: 20px; }
+.exp-panel > h2 { font-size: 17px; margin-bottom: 16px; }
+.exp-presets { display: flex; flex-wrap: wrap; gap: 7px; margin-bottom: 16px; }
+.exp-form { display: grid; gap: 16px; }
+.exp-fields { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 12px; }
+.exp-field { display: grid; gap: 6px; font-weight: 600; }
+.exp-field input { width: 100%; min-width: 0; font-weight: 400; }
+.exp-options { border: 0; padding: 0; margin: 0; display: grid; gap: 12px; }
+.exp-option { display: flex; align-items: flex-start; gap: 9px; cursor: pointer; line-height: 1.6; }
+.exp-option input { margin-top: 4px; flex: none; accent-color: var(--brand); }
+.exp-option strong { display: block; font-size: 13px; }
+.exp-option small { display: block; color: var(--muted); }
+.exp-safety { border: 1px solid #c6e6d8; background: #f3fbf7; border-radius: 14px; padding: 12px; }
+.exp-write-state { display: flex; align-items: center; flex-wrap: wrap; gap: 6px; margin-bottom: 12px; }
+.exp-estimate { border-radius: 12px; padding: 12px; background: var(--bg); line-height: 1.7; }
+.exp-estimate strong { font-variant-numeric: tabular-nums; }
+.exp-estimate.invalid { background: #fff1ef; color: var(--bad); }
+.exp-form > .btn { justify-content: center; min-height: 42px; }
+.exp-note { margin: 0; font-size: 12px; line-height: 1.7; color: var(--muted); }
+.exp-history { margin-top: 18px; padding-top: 18px; border-top: 1px solid var(--line); }
+.exp-history h3 { font-size: 14px; margin-bottom: 10px; }
+.exp-jobs { display: grid; gap: 7px; }
+.exp-job { width: 100%; padding: 10px 12px; border: 1px solid var(--line); border-radius: 12px; background: var(--panel); cursor: pointer; text-align: start; display: flex; justify-content: space-between; align-items: center; gap: 8px; }
+.exp-job:hover { background: var(--bg); }
+.exp-job[aria-pressed="true"] { border-color: var(--brand); background: #edf9f7; }
+.exp-job small { display: block; margin-top: 4px; color: var(--muted); font-size: 11px; }
+.exp-job .badge { flex: none; }
+.exp-result { min-width: 0; display: grid; gap: 16px; }
+.exp-empty { display: grid; place-items: center; text-align: center; min-height: 300px; padding: 30px; }
+.exp-empty svg { width: 44px; height: 44px; color: var(--brand); }
+.exp-empty h3 { margin-top: 16px; font-size: 18px; }
+.exp-empty p { line-height: 1.8; color: var(--muted); max-width: 480px; margin-bottom: 0; }
+.exp-result-head { display: flex; align-items: start; justify-content: space-between; flex-wrap: wrap; gap: 12px; }
+.exp-result-head h2 { font-size: 18px; }
+.exp-result-head small { display: block; color: var(--muted); margin-top: 6px; }
+.exp-actions { display: flex; flex-wrap: wrap; gap: 7px; }
+.exp-progress { padding-top: 18px; }
+.exp-progress progress { display: block; width: 100%; height: 10px; border: 0; border-radius: 8px; margin: 10px 0; accent-color: var(--brand); }
+.exp-progress progress::-webkit-progress-bar { background: var(--bg); border-radius: 8px; }
+.exp-progress progress::-webkit-progress-value { background: var(--brand); border-radius: 8px; }
+.exp-progress progress::-moz-progress-bar { background: var(--brand); border-radius: 8px; }
+.exp-progress-line { display: flex; justify-content: space-between; gap: 12px; }
+.exp-error { margin: 14px 0 0; border-inline-start: 3px solid var(--bad); background: #fff1ef; color: var(--bad); padding: 12px; border-radius: 8px; overflow-wrap: anywhere; }
+.exp-metrics { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 12px; }
+.exp-metric { background: var(--panel); border-radius: 16px; padding: 16px; box-shadow: var(--shadow); }
+.exp-metric strong { display: block; font-size: 25px; line-height: 1.5; overflow-wrap: anywhere; font-variant-numeric: tabular-nums; }
+.exp-metric span { color: var(--muted); }
+.exp-table-wrap { overflow-x: auto; }
+.exp-table { width: 100%; border-collapse: collapse; white-space: nowrap; }
+.exp-table th, .exp-table td { padding: 11px 10px; border-bottom: 1px solid var(--line); text-align: start; }
+.exp-table th { font-size: 12px; color: var(--muted); font-weight: 600; }
+.exp-table td { font-variant-numeric: tabular-nums; }
+.exp-table tbody tr:last-child td { border-bottom: 0; }
+.exp-checks { display: grid; gap: 12px; margin-top: 18px; }
+.exp-check { display: flex; gap: 10px; align-items: start; line-height: 1.7; }
+.exp-check svg { width: 20px; height: 20px; flex: none; margin-top: 2px; color: var(--ok); }
+.exp-check small { display: block; color: var(--muted); }
+.exp-preview summary { cursor: pointer; font-weight: 600; padding: 0 0 12px; }
+.exp-preview details + details { margin-top: 16px; padding-top: 16px; border-top: 1px solid var(--line); }
+.exp-page .exp-loading { color: var(--muted); padding: 12px 0; }
+@media (max-width: 1100px) { .exp-layout { grid-template-columns: 310px minmax(0, 1fr); } .exp-metrics { grid-template-columns: repeat(2, minmax(0, 1fr)); } }
+@media (max-width: 850px) { .exp-layout { grid-template-columns: 1fr; } .exp-empty { min-height: 220px; } }
+@media (max-width: 450px) { .exp-panel { padding: 16px; } .exp-metrics { gap: 8px; } .exp-metric { padding: 12px; } .exp-metric strong { font-size: 21px; } }

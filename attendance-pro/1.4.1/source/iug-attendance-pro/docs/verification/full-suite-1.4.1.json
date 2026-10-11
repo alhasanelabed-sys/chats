@@ -1,0 +1,12 @@
+{
+  "started_at_utc": "2026-10-11T12:35:09.876093+00:00",
+  "completed_at_utc": "2026-10-11T12:37:21.310716+00:00",
+  "command": "python -m pytest -q tests --tb=short",
+  "exit_code": 0,
+  "passed": 473,
+  "wall_seconds": 131.395,
+  "source_sha256_before": "01890db64706c05922465e47f3a460e21fbbb60475483efcf3f7f88bd4deb939",
+  "source_sha256_after": "01890db64706c05922465e47f3a460e21fbbb60475483efcf3f7f88bd4deb939",
+  "source_unchanged_during_run": true,
+  "status": "passed"
+}

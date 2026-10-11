@@ -1,0 +1,43 @@
+{
+  "status": "passed",
+  "started_at_utc": "2026-10-11T12:35:28.077Z",
+  "checks": [
+    "verified ADMS heartbeat updates real device UI to online/read-only without a new attendance movement",
+    "today-only monitor: all 225 records across pages, search and 48px photos",
+    "grouped searchable settings save, device writing remains off",
+    "full 225-row print beyond screen page, portrait and landscape PDFs, no horizontal clipping",
+    "background full CSV export and actual 226-line browser download",
+    "30-day month: all225employees and everycolumn fit one page width in A4 portrait/landscape and A3 landscape; no column bands or cell overflow",
+    "attendance explanation dialog uses backend decisions and raw evidence",
+    "dated attendance rules saved and listed through real UI",
+    "device direction guide distinguishes reads, writes and enrollment distribution",
+    "durable intake and rejected-line details visible",
+    "health shows real storage mode and unmeasured physical clocks",
+    "full demo: 24 employees, 3 devices, live simulation, physical routes blocked, distinct session cookies, main rows and write flag unchanged, stop and delete",
+    "390px Arabic mobile layout, compact photos, bottom navigation and accessible drawer without overflow",
+    "English mobile layout and translations"
+  ],
+  "console_errors": [],
+  "screenshots": [],
+  "main_sentinel": {
+    "before": {
+      "counts": {
+        "employee": 225,
+        "device": 4,
+        "transaction": 14626
+      },
+      "rows_sha256": "41cfb859cef5a56d8a8e04d696cf4d48164730757f33708f4e48c1e895855ade",
+      "write_back": false
+    },
+    "after": {
+      "counts": {
+        "employee": 225,
+        "device": 4,
+        "transaction": 14626
+      },
+      "rows_sha256": "41cfb859cef5a56d8a8e04d696cf4d48164730757f33708f4e48c1e895855ade",
+      "write_back": false
+    },
+    "unchanged": true
+  }
+}

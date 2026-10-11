@@ -1,0 +1,369 @@
+<!doctype html>
+<html lang="ar" dir="rtl">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta http-equiv="Content-Security-Policy" content="default-src 'self'; img-src 'self' data:; style-src 'self' 'unsafe-inline'; script-src 'none'; base-uri 'none'; form-action 'none'">
+<meta name="referrer" content="no-referrer">
+<title>حاضر — نظام الحضور والانصراف لأجهزة البصمة</title>
+<meta name="description" content="حاضر: نظام حضور وانصراف مستقل لأجهزة البصمة والوجه والكف. يكتشف الأجهزة وحده، يقرأ كل شيء لحظياً، بوابة جوال للموظفين، تنبيهات فورية، وتقارير Excel — على حاسوبك وبياناتك عندك.">
+<meta property="og:title" content="حاضر — نظام الحضور والانصراف">
+<meta property="og:description" content="أجهزة البصمة والوجه والكف، لوحة حيّة، بوابة جوال للموظف، تنبيهات، وتقارير — بالعربية والإنجليزية.">
+<meta property="og:image" content="shots/dashboard.png">
+<meta name="theme-color" content="#0b1d2a">
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Crect width='32' height='32' rx='9' fill='%230e8f86'/%3E%3Ctext x='16' y='22' font-size='16' font-family='Arial' font-weight='bold' fill='white' text-anchor='middle'%3E%D8%AD%3C/text%3E%3C/svg%3E">
+<style>
+:root {
+  --ink: #0b1d2a; --ink-2: #12324a; --teal: #19b3a7; --teal-d: #0e8f86; --mint: #9fe3dc;
+  --bg: #f4f6f8; --surface: #ffffff; --text: #13202c; --muted: #5b6b7b; --line: #e1e7ed;
+  --good: #0ca30c; --warn: #fab219; --bad: #d03b3b; --violet: #4a3aa7; --blue: #2a78d6;
+  --r: 22px; --shadow: 0 1px 2px rgba(16,24,40,.06), 0 6px 18px rgba(16,24,40,.07);
+}
+@media (prefers-color-scheme: dark) {
+  :root { --bg: #0a1620; --surface: #10212e; --text: #e6eef5; --muted: #9db0c1; --line: #1f3444;
+    --shadow: 0 1px 2px rgba(0,0,0,.3), 0 8px 24px rgba(0,0,0,.35); }
+}
+* { box-sizing: border-box; }
+html { scroll-behavior: smooth; }
+body { margin: 0; background: var(--bg); color: var(--text);
+  font: 17px/1.75 "Segoe UI", "Noto Sans Arabic", "Noto Kufi Arabic", Tahoma, system-ui, sans-serif; -webkit-font-smoothing: antialiased; }
+a { color: var(--teal-d); text-decoration: none; }
+img { max-width: 100%; display: block; }
+.wrap { max-width: 1160px; margin: 0 auto; padding: 0 20px; }
+.ltr { direction: ltr; unicode-bidi: isolate; }
+
+/* nav */
+.nav { position: sticky; top: 0; z-index: 10; background: rgba(11,29,42,.82); backdrop-filter: saturate(1.4) blur(12px); border-bottom: 1px solid rgba(255,255,255,.06); }
+.nav .wrap { display: flex; align-items: center; gap: 18px; height: 64px; }
+.brand { display: flex; align-items: center; gap: 10px; color: #fff; font-weight: 800; font-size: 19px; }
+.mark { width: 36px; height: 36px; border-radius: 11px; display: grid; place-items: center; color: #fff; font-size: 19px;
+  background: linear-gradient(135deg, var(--teal-d), var(--teal)); box-shadow: 0 6px 16px rgba(25,179,167,.4); }
+.nav ul { display: flex; gap: 4px; list-style: none; margin: 0 auto 0 0; padding: 0; }
+.nav ul a { color: #c9d6e2; padding: 8px 12px; border-radius: 999px; font-size: 15px; }
+.nav ul a:hover { background: rgba(255,255,255,.08); color: #fff; }
+.btn { display: inline-flex; align-items: center; gap: 8px; border-radius: 999px; padding: 12px 22px; font-weight: 700; font-size: 16px; transition: transform .12s, box-shadow .15s, background .15s; }
+.btn:hover { transform: translateY(-1px); }
+.btn.primary { background: var(--teal); color: #05201d; box-shadow: 0 10px 24px rgba(25,179,167,.35); }
+.btn.primary:hover { background: #2fc9bc; }
+.btn.ghost { color: #fff; border: 1px solid rgba(255,255,255,.25); }
+.btn.ghost:hover { background: rgba(255,255,255,.08); }
+.btn.small { padding: 8px 16px; font-size: 14px; }
+
+/* hero */
+.hero { position: relative; overflow: hidden; color: #fff;
+  background: radial-gradient(900px 500px at 85% -10%, rgba(25,179,167,.35), transparent 60%),
+              radial-gradient(700px 500px at 0% 110%, rgba(42,120,214,.28), transparent 60%),
+              linear-gradient(160deg, #0b1d2a 0%, #0f2a3d 55%, #0b1d2a 100%); }
+.hero::after { content: ""; position: absolute; inset: 0; pointer-events: none;
+  background-image: radial-gradient(rgba(255,255,255,.07) 1px, transparent 1px); background-size: 22px 22px; mask-image: linear-gradient(#000, transparent 80%); }
+.hero .wrap { position: relative; z-index: 1; display: grid; grid-template-columns: 1.05fr .95fr; gap: 40px; align-items: center; padding-top: 64px; padding-bottom: 72px; }
+.pill { display: inline-flex; align-items: center; gap: 8px; background: rgba(255,255,255,.08); border: 1px solid rgba(255,255,255,.14); color: var(--mint); border-radius: 999px; padding: 6px 14px; font-size: 14px; }
+.pill i { width: 8px; height: 8px; border-radius: 50%; background: #22c55e; box-shadow: 0 0 0 4px rgba(34,197,94,.25); }
+h1 { font-size: clamp(34px, 5.4vw, 60px); line-height: 1.2; margin: 18px 0 14px; letter-spacing: -.5px; }
+h1 em { font-style: normal; background: linear-gradient(90deg, #4fe0d2, #8ab8ff); -webkit-background-clip: text; background-clip: text; color: transparent; }
+.lead { color: #c6d4e1; font-size: 19px; max-width: 560px; margin: 0 0 26px; }
+.cta { display: flex; flex-wrap: wrap; gap: 10px; }
+.chips { display: flex; flex-wrap: wrap; gap: 8px; margin-top: 26px; }
+.chips span { font-size: 13px; color: #c6d4e1; background: rgba(255,255,255,.06); border-radius: 999px; padding: 4px 12px; }
+.stage { position: relative; height: 560px; }
+.stage .term { position: absolute; inset-inline-start: 4%; top: 0; width: 46%; filter: drop-shadow(0 30px 40px rgba(0,0,0,.5)); transform: rotate(-3deg); }
+.stage .phone { position: absolute; inset-inline-end: 6%; top: 50px; width: 42%; border-radius: 34px; border: 8px solid #05090d; background: #05090d;
+  box-shadow: 0 30px 60px rgba(0,0,0,.5), 0 0 0 2px #2a3644; transform: rotate(3deg); overflow: hidden; }
+.stage .badge-float { position: absolute; background: rgba(16,33,46,.9); border: 1px solid rgba(255,255,255,.12); border-radius: 16px; padding: 10px 14px; font-size: 13px; color: #dbe6ef; box-shadow: 0 12px 28px rgba(0,0,0,.35); backdrop-filter: blur(6px); }
+.stage .badge-float b { display: block; color: #fff; font-size: 20px; }
+.bf1 { top: 34px; inset-inline-end: 0; }
+.bf2 { bottom: 40px; inset-inline-start: 0; }
+
+/* stats band */
+.stats { margin-top: -38px; position: relative; z-index: 2; }
+.stats .grid { display: grid; grid-template-columns: repeat(4, 1fr); background: var(--surface); border-radius: var(--r); box-shadow: var(--shadow); overflow: hidden; }
+.stat { padding: 22px 24px; border-inline-start: 1px solid var(--line); }
+.stat:first-child { border: 0; }
+.stat b { display: block; font-size: 32px; line-height: 1.2; color: var(--teal-d); font-variant-numeric: tabular-nums; }
+.stat span { color: var(--muted); font-size: 15px; }
+
+/* sections */
+section.block { padding: 84px 0 0; }
+.kicker { color: var(--teal-d); font-weight: 700; font-size: 14px; letter-spacing: .3px; }
+h2 { font-size: clamp(26px, 3.4vw, 38px); line-height: 1.3; margin: 6px 0 12px; }
+.sub { color: var(--muted); max-width: 720px; margin: 0 0 30px; }
+.bento { display: grid; grid-template-columns: repeat(6, 1fr); gap: 16px; }
+.card { background: var(--surface); border-radius: var(--r); padding: 24px; box-shadow: var(--shadow); position: relative; overflow: hidden; }
+.card h3 { margin: 12px 0 6px; font-size: 20px; }
+.card p { margin: 0; color: var(--muted); font-size: 16px; }
+.ic { width: 48px; height: 48px; border-radius: 15px; display: grid; place-items: center; font-size: 24px; color: #fff; }
+.c2 { grid-column: span 2; } .c3 { grid-column: span 3; } .c4 { grid-column: span 4; }
+.card.dark { background: linear-gradient(150deg, var(--ink), var(--ink-2)); color: #fff; }
+.card.dark p { color: #b9c9d8; }
+.card .shot { margin: 18px -24px -24px; border-top: 1px solid var(--line); }
+.card.dark .shot { border-color: rgba(255,255,255,.08); }
+.ticks { list-style: none; padding: 0; margin: 12px 0 0; display: grid; gap: 6px; }
+.ticks li { display: flex; gap: 8px; color: var(--muted); font-size: 15px; }
+.card.dark .ticks li { color: #c6d4e1; }
+.ticks li::before { content: "✓"; color: var(--teal); font-weight: 800; }
+
+/* steps */
+.steps { display: grid; grid-template-columns: repeat(3, 1fr); gap: 16px; counter-reset: s; }
+.step { background: var(--surface); border-radius: var(--r); padding: 26px 24px; box-shadow: var(--shadow); }
+.step::before { counter-increment: s; content: counter(s); display: grid; place-items: center; width: 44px; height: 44px; border-radius: 50%;
+  background: linear-gradient(135deg, var(--teal-d), var(--teal)); color: #fff; font-weight: 800; font-size: 20px; margin-bottom: 12px; }
+.step h3 { margin: 0 0 6px; font-size: 19px; }
+.step p { margin: 0; color: var(--muted); font-size: 16px; }
+code { background: rgba(25,179,167,.12); color: var(--teal-d); border-radius: 6px; padding: 1px 7px; font-size: .92em; direction: ltr; unicode-bidi: isolate; }
+
+/* galleries */
+.tabs { display: grid; gap: 40px; }
+.tabs > div, .hero .wrap > div, .bento > * { min-width: 0; }
+body { overflow-x: hidden; }
+.gal-head { display: flex; align-items: baseline; justify-content: space-between; gap: 12px; flex-wrap: wrap; margin-bottom: 14px; }
+.gal-head h3 { margin: 0; font-size: 22px; }
+.gal-head span { color: var(--muted); font-size: 15px; }
+.gallery { display: flex; gap: 16px; overflow-x: auto; padding: 4px 4px 18px; scroll-snap-type: x mandatory; scrollbar-width: thin; }
+.gallery figure { margin: 0; flex: 0 0 auto; scroll-snap-align: start; }
+.gallery figure.wide { width: min(760px, 86vw); }
+.gallery figure.tall { width: 230px; }
+.gallery img { border-radius: 16px; box-shadow: var(--shadow); background: var(--surface); }
+.gallery figure.tall img { border-radius: 26px; border: 6px solid #05090d; }
+.gallery figure.dev img { box-shadow: none; background: none; border: 0; filter: drop-shadow(0 16px 24px rgba(0,0,0,.25)); }
+.gallery figcaption { text-align: center; color: var(--muted); font-size: 14px; margin-top: 10px; }
+
+/* compare */
+.table-wrap { overflow-x: auto; background: var(--surface); border-radius: var(--r); box-shadow: var(--shadow); }
+table { border-collapse: collapse; width: 100%; min-width: 640px; font-size: 16px; }
+th, td { padding: 14px 18px; border-bottom: 1px solid var(--line); text-align: start; }
+thead th { font-size: 15px; color: var(--muted); font-weight: 600; }
+thead th.us { color: var(--teal-d); }
+td.us { font-weight: 700; color: var(--good); background: rgba(25,179,167,.06); }
+td.no { color: var(--muted); }
+tr:last-child td { border-bottom: 0; }
+
+/* privacy + faq */
+.two { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; }
+details { background: var(--surface); border-radius: 16px; box-shadow: var(--shadow); padding: 4px 20px; margin-bottom: 10px; }
+summary { cursor: pointer; font-weight: 700; padding: 14px 0; list-style: none; display: flex; justify-content: space-between; gap: 10px; }
+summary::-webkit-details-marker { display: none; }
+summary::after { content: "+"; color: var(--teal-d); font-size: 22px; line-height: 1; }
+details[open] summary::after { content: "−"; }
+details p { margin: 0 0 16px; color: var(--muted); }
+
+/* final cta */
+.final { margin: 90px 0 0; padding: 56px 0; color: #fff; text-align: center;
+  background: radial-gradient(600px 300px at 50% 0%, rgba(25,179,167,.35), transparent 70%), linear-gradient(160deg, #0b1d2a, #0f2a3d); }
+.final h2 { margin: 0 0 10px; }
+.final p { color: #c6d4e1; margin: 0 auto 24px; max-width: 620px; }
+.final .cta { justify-content: center; }
+footer { text-align: center; color: var(--muted); font-size: 14px; padding: 26px 0 40px; }
+
+@media (max-width: 980px) {
+  .hero .wrap { grid-template-columns: 1fr; padding-top: 40px; }
+  .stage { height: 460px; max-width: 520px; width: 100%; margin: 0 auto; }
+  .stats .grid { grid-template-columns: repeat(2, 1fr); }
+  .stat:nth-child(3) { border-inline-start: 0; }
+  .stat { border-top: 1px solid var(--line); }
+  .bento { grid-template-columns: repeat(2, 1fr); }
+  .c2, .c3, .c4 { grid-column: span 2; }
+  .steps, .two { grid-template-columns: 1fr; }
+  .nav ul { display: none; }
+  .nav .wrap .btn { margin-inline-start: auto; }
+}
+@media (max-width: 520px) {
+  body { font-size: 16px; }
+  .stage { height: 380px; }
+  .bf1, .bf2 { display: none; }
+  .bento { grid-template-columns: 1fr; }
+  .c2, .c3, .c4 { grid-column: auto; }
+}
+</style>
+</head>
+<body>
+
+<nav class="nav"><div class="wrap">
+  <a class="brand" href="#top"><span class="mark">ح</span>حاضر</a>
+  <ul><li><a href="#features">المزايا</a></li><li><a href="#how">كيف يعمل</a></li><li><a href="#screens">من داخل البرنامج</a></li><li><a href="#compare">المقارنة</a></li><li><a href="#faq">أسئلة</a></li></ul>
+  <a class="btn primary small" href="#download">اطلب نسخة</a>
+</div></nav>
+
+<header class="hero" id="top"><div class="wrap">
+  <div>
+    <span class="pill"><i></i>الإصدار 1.0 · عربي وإنجليزي</span>
+    <h1>الحضور والانصراف<br><em>كما يجب أن يكون.</em></h1>
+    <p class="lead">حاضر يتحدث مع أجهزة البصمة والوجه والكف بنفسه: يكتشفها وحده، يقرأ كل حركة لحظة حدوثها، ويعطي كل موظف تطبيقاً على جواله — وكل بياناتك تبقى على حاسوبك.</p>
+    <div class="cta">
+      <a class="btn primary" href="#download">اطلب نسخة</a>
+      <a class="btn ghost" href="#screens">شاهد البرنامج</a>
+    </div>
+    <div class="chips"><span>بصمة الإصبع</span><span>الوجه</span><span>الكف</span><span>البطاقة</span><span>بدون برنامج وسيط</span><span>بدون إنترنت</span></div>
+  </div>
+  <div class="stage" aria-hidden="true">
+    <img class="term" src="shots/panel-idle.png" alt="">
+    <div class="phone"><img src="shots/portal-home.png" alt=""></div>
+    <div class="badge-float bf1"><b>لحظياً</b>تظهر البصمة فور حدوثها</div>
+    <div class="badge-float bf2"><b>٧ ملّي ثانية</b>لفتح اللوحة مع ٣٠٠٠ موظف</div>
+  </div>
+</div></header>
+
+<div class="stats"><div class="wrap"><div class="grid">
+  <div class="stat"><b>٣٠٠٠+</b><span>موظف و١٠ أجهزة في اختبار التحمّل</span></div>
+  <div class="stat"><b>١٣</b><span>تقريراً مع Excel وCSV والطباعة</span></div>
+  <div class="stat"><b>٤</b><span>قنوات تنبيه: البرنامج، البريد، تيليجرام، Webhook</span></div>
+  <div class="stat"><b>٠</b><span>اشتراكات سحابية — قاعدة البيانات عندك</span></div>
+</div></div></div>
+
+<section class="block" id="features"><div class="wrap">
+  <div class="kicker">المزايا</div>
+  <h2>كل ما يحتاجه قسم الموارد البشرية، في مكان واحد</h2>
+  <p class="sub">من لحظة وضع الموظف إصبعه على الجهاز حتى تقرير نهاية الشهر — بدون جداول يدوية ولا انتظار.</p>
+  <div class="bento">
+    <div class="card dark c4">
+      <span class="ic" style="background:linear-gradient(135deg,#19b3a7,#0e6f86)">⚡</span>
+      <h3>لوحة حيّة تعرف ما يحدث الآن</h3>
+      <p>شريط «الحركات الآن» بصور الموظفين أعلى الصفحة، ونسبة الحضور، والمتأخرون والغائبون، وإيقاع اليوم، وحالة كل جهاز — تتحدث تلقائياً لحظة وصول البصمة.</p>
+      <div class="shot"><img src="shots/dashboard.png" alt="لوحة التحكم" loading="lazy"></div>
+    </div>
+    <div class="card c2">
+      <span class="ic" style="background:linear-gradient(135deg,#5b8def,#3a56c8)">📱</span>
+      <h3>بوابة الموظف على الجوال</h3>
+      <p>يرى الموظف دوامه اليوم وسجلّه الشهري وأرصدة إجازاته، ويرسل طلب إجازة أو تصحيح بصمة أو عمل إضافي من جواله. تُثبَّت كتطبيق.</p>
+      <ul class="ticks"><li>من الشبكة أو من البيت بأمان</li><li>بطاقات دخول برمز QR</li><li>عربي وإنجليزي ووضع ليلي</li></ul>
+    </div>
+    <div class="card c2">
+      <span class="ic" style="background:linear-gradient(135deg,#f59e0b,#d9480f)">🖐</span>
+      <h3>الأجهزة تظهر وحدها</h3>
+      <p>كل جهاز يتصل بالحاسوب يُضاف تلقائياً، ويُبحث عن الباقي في الشبكة. يُقرأ منه المستخدمون والبصمات والوجوه والكف والحركات.</p>
+    </div>
+    <div class="card c2">
+      <span class="ic" style="background:linear-gradient(135deg,#19b3a7,#0e8f86)">🎛</span>
+      <h3>ادخل إلى الجهاز عن بُعد</h3>
+      <p>واجهة مرسومة بمقاس الجهاز نفسه: دقة التعرف، مكافحة الانتحال، الساعة، الشبكة، الخادم، الصوت والشاشة — تُقرأ وتُكتب مباشرة.</p>
+    </div>
+    <div class="card c2">
+      <span class="ic" style="background:linear-gradient(135deg,#d03b3b,#9b1c1c)">🔔</span>
+      <h3>تنبيهات في وقتها</h3>
+      <p>التأخير، الغياب، بصمة الخروج الناقصة، انقطاع جهاز، طلب جديد — داخل البرنامج وبالبريد وتيليجرام، مع ساعات هدوء وتقرير أسبوعي.</p>
+    </div>
+    <div class="card c3">
+      <span class="ic" style="background:linear-gradient(135deg,#4a3aa7,#2e2380)">🗓</span>
+      <h3>دوام حقيقي، لا جدول ثابت</h3>
+      <p>أوقات دوام وورديات دورية وجداول للأقسام والأفراد، ودوام ليلي ومرن، وعطل رسمية، وإجازات وعمل إضافي وبصمات يدوية مع الاعتماد.</p>
+      <ul class="ticks"><li>جدول مؤقت ليوم واحد</li><li>قواعد التأخير والسماح والإضافي</li><li>تقويم لكل موظف</li></ul>
+    </div>
+    <div class="card c3">
+      <span class="ic" style="background:linear-gradient(135deg,#2a78d6,#1d4f9a)">📊</span>
+      <h3>تقارير تفتح فوراً</h3>
+      <p>أول وآخر بصمة، الحضور اليومي، التأخير، الغياب، الإضافي، الملخص والكشف الشهري، الأقسام… تُصدَّر إلى Excel وCSV وتُطبع، وتفتح فوراً حتى مع عشرات آلاف السجلات.</p>
+      <ul class="ticks"><li>بالعربية أو الإنجليزية مع ترجمة الأسماء</li><li>حسب القسم أو الموظف أو الجهاز</li></ul>
+    </div>
+    <div class="card c3">
+      <span class="ic" style="background:linear-gradient(135deg,#0ca30c,#077a07)">🔄</span>
+      <h3>مزامنة حسب المناطق</h3>
+      <p>بصمة سُجِّلت على جهاز تصل لكل أجهزة منطقتها، والموظف الجديد يُرسَل لأجهزته، والمستقيل يُحذف منها — تلقائياً.</p>
+    </div>
+    <div class="card c3">
+      <span class="ic" style="background:linear-gradient(135deg,#475569,#1e293b)">🤝</span>
+      <h3>يعمل بجانب برنامجك الحالي</h3>
+      <p>إن كان برنامج آخر يستقبل الأجهزة الآن، يعمل حاضر في وضع «القراءة فقط» دون أن يغيّر شيئاً، وينتقل للوضع الكامل حين تقرر.</p>
+    </div>
+  </div>
+</div></section>
+
+<section class="block" id="how"><div class="wrap">
+  <div class="kicker">كيف يعمل</div>
+  <h2>ثلاث خطوات، ثم يعمل وحده</h2>
+  <p class="sub">لا مكتبات ولا برامج وسيطة ولا إعداد معقد.</p>
+  <div class="steps">
+    <div class="step"><h3>شغّل حاضر</h3><p>انقر <code>start.bat</code> مرتين: يثبّت كل ما يلزمه في المرة الأولى ويفتح المتصفح. ادخل بـ <code>admin</code> وغيّر كلمة المرور.</p></div>
+    <div class="step"><h3>وجّه الأجهزة إليه</h3><p>في إعداد «الخادم السحابي» على الجهاز: عنوان هذا الحاسوب والمنفذ <code>90</code>. أو اترك حاضر يجدها في الشبكة عبر <code>4370</code>.</p></div>
+    <div class="step"><h3>انتهى</h3><p>تظهر الأجهزة والموظفون والبصمات والحركات خلال دقيقة. افتح البوابة للموظفين من صفحة الموظفين وشارك الرابط <code>/me</code>.</p></div>
+  </div>
+</div></section>
+
+<section class="block" id="screens"><div class="wrap">
+  <div class="kicker">من داخل البرنامج</div>
+  <h2>صُمّم كتطبيق جوال حديث — على شاشة ويندوز</h2>
+  <p class="sub">بطاقات واضحة، أزرار كبيرة، ونوافذ تنزلق من الأسفل. ويعمل من المتصفح على أي جهاز في شبكتك، حتى الجوال.</p>
+  <div class="tabs">
+    <div>
+      <div class="gal-head"><h3>إدارة الموارد البشرية</h3><span>اسحب لترى المزيد ←</span></div>
+      <div class="gallery">
+        <figure class="wide"><img src="shots/dashboard.png" alt="لوحة التحكم" loading="lazy"><figcaption>لوحة التحكم الحيّة</figcaption></figure>
+        <figure class="wide"><img src="shots/monitor.png" alt="المراقبة الحية" loading="lazy"><figcaption>المراقبة الحيّة بصور الموظفين</figcaption></figure>
+        <figure class="wide"><img src="shots/employees.png" alt="الموظفون" loading="lazy"><figcaption>الموظفون والبصمات والوجوه والكف</figcaption></figure>
+        <figure class="wide"><img src="shots/report.png" alt="كشف الحضور الشهري" loading="lazy"><figcaption>كشف الحضور الشهري</figcaption></figure>
+        <figure class="wide"><img src="shots/alerts.png" alt="التنبيهات" loading="lazy"><figcaption>التنبيهات والقنوات</figcaption></figure>
+      </div>
+    </div>
+    <div>
+      <div class="gal-head"><h3>الجهاز عن بُعد · والجوال</h3><span>واجهة الجهاز بأبعاده الحقيقية</span></div>
+      <div class="gallery">
+        <figure class="tall dev"><img src="shots/panel-idle.png" alt="شاشة الجهاز" loading="lazy"><figcaption>شاشة الجهاز</figcaption></figure>
+        <figure class="tall dev"><img src="shots/panel-menu.png" alt="قائمة الجهاز" loading="lazy"><figcaption>قائمة الإعدادات</figcaption></figure>
+        <figure class="tall dev"><img src="shots/panel-bio.png" alt="دقة التعرف" loading="lazy"><figcaption>ضبط دقة التعرف</figcaption></figure>
+        <figure class="tall"><img src="shots/portal-home.png" alt="بوابة الموظف" loading="lazy"><figcaption>بوابة الموظف: اليوم</figcaption></figure>
+        <figure class="tall"><img src="shots/portal-calendar.png" alt="سجل الموظف" loading="lazy"><figcaption>سجلّه الشهري</figcaption></figure>
+        <figure class="tall"><img src="shots/phone-dashboard.png" alt="اللوحة على الجوال" loading="lazy"><figcaption>لوحة الإدارة على الجوال</figcaption></figure>
+      </div>
+    </div>
+  </div>
+</div></section>
+
+<section class="block" id="compare"><div class="wrap">
+  <div class="kicker">المقارنة</div>
+  <h2>ما الذي يتغير مع حاضر؟</h2>
+  <p class="sub">مقارنة بالطريقة المعتادة: برنامج الجهاز التقليدي مع كشوف Excel.</p>
+  <div class="table-wrap"><table>
+    <thead><tr><th></th><th>الطريقة المعتادة</th><th class="us">حاضر</th></tr></thead>
+    <tbody>
+      <tr><td>ظهور البصمة في البرنامج</td><td class="no">عند السحب اليدوي أو كل فترة</td><td class="us">لحظياً</td></tr>
+      <tr><td>إضافة الأجهزة</td><td class="no">يدوياً جهازاً جهازاً</td><td class="us">تلقائياً</td></tr>
+      <tr><td>واجهة عربية كاملة مع ترجمة أسماء الموظفين للإنجليزية</td><td class="no">جزئياً</td><td class="us">✓</td></tr>
+      <tr><td>تطبيق جوال للموظف: سجله وطلباته</td><td class="no">—</td><td class="us">✓</td></tr>
+      <tr><td>تنبيهات تأخير وغياب وانقطاع أجهزة (بريد وتيليجرام)</td><td class="no">—</td><td class="us">✓</td></tr>
+      <tr><td>إعدادات الجهاز عن بُعد: دقة التعرف، مكافحة الانتحال، الساعة، الخادم</td><td class="no">من أمام الجهاز</td><td class="us">من مكتبك</td></tr>
+      <tr><td>العمل جنباً إلى جنب مع برنامج آخر دون تعارض</td><td class="no">—</td><td class="us">وضع القراءة فقط</td></tr>
+      <tr><td>نسخ احتياطي يومي تلقائي</td><td class="no">يدوياً</td><td class="us">✓</td></tr>
+    </tbody>
+  </table></div>
+</div></section>
+
+<section class="block" id="privacy"><div class="wrap">
+  <div class="kicker">الأمان والخصوصية</div>
+  <h2>بياناتك لا تغادر مؤسستك</h2>
+  <div class="two">
+    <div class="card"><ul class="ticks">
+      <li>يعمل على حاسوبك داخل شبكتك، وقاعدة البيانات ملف عندك في <code>C:\ProgramData\Hader</code>.</li>
+      <li>لا يحتاج إنترنت إلا لتثبيت المكتبات أول مرة، ولإرسال التنبيهات إن فعّلتها.</li>
+      <li>نسخة احتياطية تلقائية كل يوم، واستعادة بنقرة.</li>
+      <li>وضع «القراءة فقط» لا يكتب على الأجهزة شيئاً.</li>
+    </ul></div>
+    <div class="card"><ul class="ticks">
+      <li>أدوار وصلاحيات لكل مستخدم، وسجل تدقيق لكل تعديل.</li>
+      <li>الموظف يرى بياناته فقط، بكلمة مرور خاصة به وقفل بعد المحاولات الخاطئة.</li>
+      <li>كلمات المرور مشفّرة، وكلمات مرور البريد وتيليجرام لا تُعرض بعد حفظها.</li>
+      <li>صور البصمة الملتقطة مع كل حركة متوقفة افتراضياً.</li>
+    </ul></div>
+  </div>
+</div></section>
+
+<section class="block" id="faq"><div class="wrap">
+  <div class="kicker">أسئلة شائعة</div>
+  <h2>قبل أن تبدأ</h2>
+  <details><summary>ما الأجهزة التي يعمل معها؟</summary><p>أجهزة البصمة والوجه والكف التي ترسل بياناتها إلى خادم عبر بروتوكول الإرسال (Push / Cloud Server)، أو التي تقبل الاتصال المباشر على المنفذ 4370. يقرأ حاضر طراز الجهاز ويعرض واجهته بأبعاده.</p></details>
+  <details><summary>عندي برنامج آخر يستقبل الأجهزة الآن، هل أوقفه؟</summary><p>لا. يعمل حاضر في وضع «القراءة فقط» ويقرأ الأجهزة مباشرة كل دقيقة دون أن يكتب عليها. حين تريد الانتقال الكامل، حرّر المنفذ 90 فيأخذه حاضر خلال ثوانٍ.</p></details>
+  <details><summary>هل يحتاج إنترنت؟</summary><p>فقط في التشغيل الأول لتثبيت المكتبات، وإن أردت إرسال التنبيهات بالبريد أو تيليجرام. العمل اليومي كله داخل شبكتك.</p></details>
+  <details><summary>كيف يستخدم الموظفون البوابة؟ وهل تعمل من البيت؟</summary><p>من صفحة «بوابة الموظف» تُصدر كلمات المرور وتُطبع بطاقات فيها رمز QR، فيمسحه الموظف بكاميرا جواله ويضيف البوابة للشاشة الرئيسية. تعمل داخل شبكة المؤسسة، ومن البيت عبر رابط آمن (HTTPS) يُفتح بخطوة واحدة — والمنفذ المفتوح للإنترنت يخدم البوابة فقط، فلا تظهر صفحات الإدارة ولا الأجهزة خارج المؤسسة.</p></details>
+  <details><summary>هل يمكن تحويل الواجهة للإنجليزية؟</summary><p>نعم، بزر واحد: الواجهة والتقارير وأسماء الأقسام والأجهزة، وأسماء الموظفين تُكتب بالحروف اللاتينية تلقائياً أو بالاسم الإنجليزي إن أدخلته.</p></details>
+  <details><summary>نسيت كلمة مرور المدير</summary><p>شغّل <code>reset_password.bat</code> على الحاسوب الذي يعمل عليه البرنامج، فتعود إلى admin / admin ويُطلب تغييرها عند الدخول.</p></details>
+</div></section>
+
+<section class="final" id="download"><div class="wrap">
+  <h2>جاهز لتجربة حاضر في مؤسستك؟</h2>
+  <p>نثبّته لكم على حاسوب في شبكتكم، ونربط الأجهزة، ونفتح بوابة الموظفين — مع نسخة تجريبية بشركة نموذجية لتراه قبل أن تبدأ.</p>
+  <div class="cta">
+    <a class="btn primary" href="https://github.com/abdulrahmanahmedelabed-prog/hader/issues/new?title=%D8%B7%D9%84%D8%A8%20%D9%86%D8%B3%D8%AE%D8%A9%20%D9%85%D9%86%20%D8%AD%D8%A7%D8%B6%D8%B1&body=%D8%A7%D8%B3%D9%85%20%D8%A7%D9%84%D9%85%D8%A4%D8%B3%D8%B3%D8%A9%3A%0A%D8%B9%D8%AF%D8%AF%20%D8%A7%D9%84%D9%85%D9%88%D8%B8%D9%81%D9%8A%D9%86%3A%0A%D8%B9%D8%AF%D8%AF%20%D8%A7%D9%84%D8%A3%D8%AC%D9%87%D8%B2%D8%A9%3A%0A%D9%88%D8%B3%D9%8A%D9%84%D8%A9%20%D8%A7%D9%84%D8%AA%D9%88%D8%A7%D8%B5%D9%84%3A" rel="noopener">اطلب نسخة من حاضر</a>
+    <a class="btn ghost" href="#faq">أسئلة شائعة</a>
+  </div>
+</div></section>
+
+<footer><div class="wrap">حاضر 1.0 — نظام الحضور والانصراف لأجهزة البصمة والوجه والكف</div></footer>
+</body>
+</html>

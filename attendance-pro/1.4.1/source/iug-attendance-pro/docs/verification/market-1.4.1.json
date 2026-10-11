@@ -1,0 +1,71 @@
+{
+  "status": "partial",
+  "reviewed_at_utc": "2026-10-11T09:30:44.674Z",
+  "local_date": "2026-10-11",
+  "timezone": "Asia/Hebron",
+  "scope": "Attendance only, 10000 employees, 20 ZKTeco SpeedFace V5L",
+  "current_vendor_pages_retrieved": false,
+  "reason": "Managed restricted HTTP policy excludes vendor hosts; no general web search capability. No bypass attempted.",
+  "method": "Read local source and existing v1.4.0 verification. Retrieved official Suprema G-SDK docs via enabled read-only GitHub tool.",
+  "vendor_capability_verdict": "Comparison of functional scope and acceptance criteria; no vendor benchmark, price, capacity, license or release-specific certification.",
+  "suprema_commit": "4874cd4f1ba6021e81bf2dbf8c51beaa7d7d03bb",
+  "sources": [
+    {
+      "path": "docs/README.md",
+      "url": "https://github.com/supremainc/g-sdk/blob/4874cd4f1ba6021e81bf2dbf8c51beaa7d7d03bb/docs/README.md",
+      "retrieved": true,
+      "content_characters": 544,
+      "sha256_utf8": "82d8f091d35e883aa299c921b84cbec382147037497f7f417ff58432326a1552"
+    },
+    {
+      "path": "docs/_apis/connect.md",
+      "url": "https://github.com/supremainc/g-sdk/blob/4874cd4f1ba6021e81bf2dbf8c51beaa7d7d03bb/docs/_apis/connect.md",
+      "retrieved": true,
+      "content_characters": 14447,
+      "sha256_utf8": "d78f93ef4aa5c7359ca3e9985c3fa5ce8d536e4c11fa12ce63b115e3c051592d"
+    },
+    {
+      "path": "docs/_apis/event.md",
+      "url": "https://github.com/supremainc/g-sdk/blob/4874cd4f1ba6021e81bf2dbf8c51beaa7d7d03bb/docs/_apis/event.md",
+      "retrieved": true,
+      "content_characters": 33732,
+      "sha256_utf8": "bf0cb18f44e95aa7ecefe0f197aba28ab132b5626d31c891a109f4509750c389"
+    },
+    {
+      "path": "docs/_apis/device.md",
+      "url": "https://github.com/supremainc/g-sdk/blob/4874cd4f1ba6021e81bf2dbf8c51beaa7d7d03bb/docs/_apis/device.md",
+      "retrieved": true,
+      "content_characters": 12782,
+      "sha256_utf8": "698459a2f221e76ffb46497f1d1bda1e317c2041c0b1784de4eb80014d89b36a"
+    },
+    {
+      "path": "docs/_apis/tna.md",
+      "url": "https://github.com/supremainc/g-sdk/blob/4874cd4f1ba6021e81bf2dbf8c51beaa7d7d03bb/docs/_apis/tna.md",
+      "retrieved": true,
+      "content_characters": 6374,
+      "sha256_utf8": "c1cf8943de7149ea60b5689874c060f8a2cfdfa7b22506509426540073d1a666"
+    }
+  ],
+  "acceptance": [
+    {
+      "requirement": "Connectivity without a fresh attendance record",
+      "observable": "Heartbeat/read refreshes last contact and visible device state, even with zero new punches"
+    },
+    {
+      "requirement": "Read-only mode retains connection state",
+      "observable": "Responding device shows connected and read-only; no device writes"
+    },
+    {
+      "requirement": "Training state truthful",
+      "observable": "Virtual device shows simulated-connected in orange with text; actual device connectivity never fabricated"
+    },
+    {
+      "requirement": "All today's history",
+      "observable": "Initial snapshot includes records at 00:00 and before app startup; excludes previous day's 23:59:59 and next day's 00:00; late upload uses punch date"
+    },
+    {
+      "requirement": "Month print single width",
+      "observable": "Employee identity and all 30/31 day columns on one paper width; every employee printed across vertical pages; readable text"
+    }
+  ]
+}

@@ -1,0 +1,27 @@
+{
+  "python": "3.12.14",
+  "platform": "Linux-6.18.44-x86_64-with-glibc2.41",
+  "packages": {
+    "fastapi": "0.143.0",
+    "starlette": "1.7.0",
+    "sqlalchemy": "2.1.4",
+    "uvicorn": "0.54.0",
+    "httpx": "0.28.1",
+    "openpyxl": "3.1.5",
+    "tzdata": "2026.5"
+  },
+  "native_windows_verified": false,
+  "physical_devices_verified": false,
+  "source_sha256": "b18f13fca42f8db9d47070edc0fdef07b06bfddbe9041b3bba4e7103108d5a5a",
+  "print_pdfs": {
+    "portrait": {
+      "Pages": "22",
+      "Page size": "594.96 x 841.92 pts (A4)"
+    },
+    "landscape": {
+      "Pages": "15",
+      "Page size": "841.92 x 594.96 pts (A4)"
+    }
+  },
+  "institutional_date_test": "UTC 22:30 with Asia/Hebron resolves next institutional day; zone and server-wall fallback assertions passed"
+}

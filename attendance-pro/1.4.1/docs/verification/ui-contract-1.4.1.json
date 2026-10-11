@@ -1,0 +1,10 @@
+{
+  "status": "passed",
+  "checked_at_utc": "2026-10-11T09:33:56.852Z",
+  "checks": [
+    "ar: online heartbeat independent of read-only, offline remains offline, explicit virtual connection",
+    "en: online heartbeat independent of read-only, offline remains offline, explicit virtual connection",
+    "today history never claims ADMS batch or contact proves complete retrieval; virtual and escaped details",
+    "report month start follows institution at UTC/local month boundary"
+  ]
+}

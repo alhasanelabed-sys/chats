@@ -1,0 +1,30 @@
+{
+  "source": "user-provided benchmark console output; not independently rerun on Windows",
+  "version": "1.2.0",
+  "status": "passed",
+  "python": "3.13.15",
+  "platform": "Windows-11-10.0.26200-SP0",
+  "cpu_count": 4,
+  "employees": 10000,
+  "devices": 20,
+  "days": 30,
+  "punches": 600000,
+  "repeat": 3,
+  "seed_seconds": 159.920414,
+  "total_seconds": 247.955762,
+  "report_median_seconds": {
+    "transactions": 0.79393,
+    "summary": 2.515558,
+    "daily": 0.140508
+  },
+  "summary_first_seconds": 13.347946,
+  "export_seconds": 50.976389,
+  "export_rows_including_header": 600001,
+  "export_size_bytes": 42767339,
+  "ingestion_seconds": 0.833051,
+  "successful_parallel_requests": 20,
+  "reuploaded_records": 20000,
+  "punches_after": 600000,
+  "isolated_temporary_database": true,
+  "physical_devices_verified": false
+}

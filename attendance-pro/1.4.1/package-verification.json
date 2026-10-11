@@ -1,0 +1,12 @@
+{
+  "version": "1.4.1",
+  "archive": "/workspace/work/releases/iug-attendance-pro-1.4.1.zip",
+  "size_bytes": 4117555,
+  "sha256": "e70f7cef97a7353100e118eeab5ee658195aacee6cd12707276987d0b53483db",
+  "file_count": 193,
+  "crc_and_all_file_hashes": "passed",
+  "runtime_data_included": false,
+  "clean_extracted_smoke": "passed",
+  "verified_runtime_source_matches_tested_source": true,
+  "v14_monitor_print_export_and_demo_workers": "passed"
+}

@@ -1,0 +1,116 @@
+{
+  "status": "passed",
+  "started_at_utc": "2026-10-09T19:05:58.702119+00:00",
+  "employees": 10000,
+  "devices": 20,
+  "days": 30,
+  "punches": 600000,
+  "repeat": 3,
+  "environment": {
+    "python": "3.12.14",
+    "platform": "Linux-6.18.44-x86_64-with-glibc2.41",
+    "cpu_count": 3
+  },
+  "isolated_temporary_database": true,
+  "physical_devices_verified": false,
+  "version": "1.2.0",
+  "date_range": {
+    "start": "2026-09-08",
+    "end": "2026-10-07"
+  },
+  "seed_seconds": 11.283023,
+  "reports": {
+    "transactions": {
+      "median_seconds": 0.187447,
+      "min_seconds": 0.1778,
+      "max_seconds": 0.202112,
+      "samples_seconds": [
+        0.187447,
+        0.202112,
+        0.1778
+      ],
+      "total": 600000,
+      "page_size": 200,
+      "validation": "passed"
+    },
+    "summary": {
+      "median_seconds": 0.672851,
+      "min_seconds": 0.663475,
+      "max_seconds": 0.718576,
+      "samples_seconds": [
+        0.718576,
+        0.663475,
+        0.672851
+      ],
+      "total": 10000,
+      "page_size": 200,
+      "validation": "passed"
+    },
+    "daily": {
+      "median_seconds": 0.042345,
+      "min_seconds": 0.04202,
+      "max_seconds": 0.043016,
+      "samples_seconds": [
+        0.043016,
+        0.042345,
+        0.04202
+      ],
+      "total": 300000,
+      "page_size": 200,
+      "validation": "passed"
+    },
+    "calculation_probe_employee_codes": [
+      "1",
+      "20",
+      "10000"
+    ]
+  },
+  "export": {
+    "seconds": 25.55496,
+    "size_bytes": 42767339,
+    "data_rows": 600000,
+    "rows_including_header": 600001,
+    "validation_seconds": 2.068804,
+    "validation": "passed",
+    "temporary_csv_removed_on_exit": true
+  },
+  "ingestion": {
+    "seconds": 0.494937,
+    "parallel_devices": 20,
+    "requests": 20,
+    "http_200_replies": 20,
+    "reuploaded_records": 20000,
+    "punches_before": 600000,
+    "punches_after": 600000,
+    "request_latency": {
+      "median_seconds": 0.421235,
+      "min_seconds": 0.250929,
+      "max_seconds": 0.474197,
+      "samples_seconds": [
+        0.341709,
+        0.406709,
+        0.474197,
+        0.374488,
+        0.424188,
+        0.360743,
+        0.428127,
+        0.435499,
+        0.459796,
+        0.250929,
+        0.418282,
+        0.277505,
+        0.454955,
+        0.445631,
+        0.387913,
+        0.473756,
+        0.391338,
+        0.448932,
+        0.252935,
+        0.465171
+      ]
+    },
+    "validation": "passed",
+    "physical_devices_verified": false
+  },
+  "total_seconds": 44.230464
+}
