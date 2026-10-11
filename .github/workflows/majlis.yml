@@ -36,6 +36,7 @@ jobs:
           bash scripts/test-android-data.sh
           bash scripts/test-meeting-evaluation.sh
           bash scripts/test-text-codecs.sh
+          bash scripts/test-direct-ai.sh
       - name: Build and verify debug APK
         run: bash scripts/build-android.sh
       - uses: actions/upload-artifact@v4

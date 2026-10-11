@@ -261,7 +261,7 @@ public final class MeetingApi {
         }
     }
 
-    private static JSONObject translationResponse(String body, String target, JSONArray sourceSegments) throws Exception {
+    static JSONObject translationResponse(String body, String target, JSONArray sourceSegments) throws Exception {
         try {
             JSONObject result = new JSONObject(body);
             if (!target.equals(nonempty(result, "target_language"))) throw new Exception();
@@ -310,7 +310,7 @@ public final class MeetingApi {
         return result;
     }
 
-    private static JSONObject analysisResponse(String body) throws Exception {
+    static JSONObject analysisResponse(String body) throws Exception {
         try {
             return analysisFields(new JSONObject(body));
         } catch (Exception e) {
@@ -318,7 +318,7 @@ public final class MeetingApi {
         }
     }
 
-    private static JSONObject analysisFields(JSONObject result) throws Exception {
+    static JSONObject analysisFields(JSONObject result) throws Exception {
         JSONObject clean = transcriptPayload(result);
         JSONObject minutes = result.getJSONObject("minutes");
         JSONObject cleanMinutes = copyFields(minutes, "summary", "discussion_points", "open_questions");

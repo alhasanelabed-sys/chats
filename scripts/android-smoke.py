@@ -302,11 +302,67 @@ class Smoke:
         if prefs.get("server_url") or prefs.get("access_token"):
             raise AssertionError("This smoke must run without a configured analysis service")
         self.tap("إنشاء الترجمة")
-        self.text("اضبط رابط الخدمة ورمز الوصول في الإعدادات أولًا.", scroll=False)
+        self.text("أضف مفتاح API للمزوّد من الإعدادات أولًا.", scroll=False)
         self.record("16-translation-needs-service-without-upload")
         self.tap("حسنًا")
         self.tap("المحضر والملخص")
         self.text(DEMO_TITLE)
+
+    def direct_provider_settings(self):
+        """Exercise native KeyStore using dummy keys; never issue a provider request."""
+        dummy = "majlis_dummy_key_local_smoke_2026"
+        self.text("خدمة التحليل")
+        self.text("Gemini", scroll=False)
+        self.text("اختبار الاتصال")
+        tree = self.snapshot()
+        if any("your-server" in node.get("text", "") for node in tree.iter("node")):
+            raise AssertionError("Default direct-provider setup still requires a server URL")
+        self.record("31-direct-provider-no-server")
+
+        def save_dummy():
+            field = self.find(lambda n: n.get("class") == "android.widget.EditText", "provider key field")
+            self.tap_node(field)
+            self.adb("shell", "input", "keycombination", "113", "29")
+            self.adb("shell", "input", "keyevent", "67")
+            self.adb("shell", "input", "text", dummy)
+            if re.search(r"\b(?:mInputShown|mIsInputViewShown|isInputShown)=true\b", self.adb("shell", "dumpsys", "input_method")):
+                self.adb("shell", "input", "keyevent", "4")
+            self.tap("حفظ الإعدادات")
+
+        def encrypted_records():
+            raw = self.adb("exec-out", "run-as", PACKAGE, "cat", "shared_prefs/provider_secrets.xml")
+            if dummy in raw or dummy in self.adb("exec-out", "run-as", PACKAGE, "cat", "shared_prefs/majlis.xml"):
+                raise AssertionError("Provider key was stored in plaintext")
+            return {node.get("name"): node.text or "" for node in ET.fromstring(raw)}
+
+        save_dummy()
+        first = encrypted_records().get("encrypted_gemini")
+        if not first:
+            raise AssertionError("Gemini encrypted credential was not saved")
+        self.adb("shell", "am", "force-stop", PACKAGE)
+        self.adb("shell", "am", "start", "-n", COMPONENT)
+        self.tap("الإعدادات")
+        key_field = self.find(lambda n: n.get("class") == "android.widget.EditText", "restored key")
+        if key_field.get("text", "") in ("", "مفتاح API") or key_field.get("password") != "true":
+            raise AssertionError("Native KeyStore did not restore a masked key after restart")
+        if dummy in ET.tostring(self.snapshot(), encoding="unicode"):
+            raise AssertionError("Provider key leaked to accessibility snapshot")
+        self.record("32-encrypted-key-restored-after-restart")
+        self.tap_node(self.find(lambda n: n.get("class") == "android.widget.Spinner", "provider chooser"))
+        self.tap("OpenAI")
+        save_dummy()
+        if set(encrypted_records()) != {"encrypted_gemini", "encrypted_openai"}:
+            raise AssertionError("Both provider credentials were not retained")
+        self.tap("مسح مفتاح هذا المزوّد")
+        remaining = encrypted_records()
+        if remaining != {"encrypted_gemini": first}:
+            raise AssertionError("Removing OpenAI also altered Gemini credential")
+        self.tap_node(self.find(lambda n: n.get("class") == "android.widget.Spinner", "provider chooser"))
+        self.tap("Gemini")
+        self.tap("مسح مفتاح هذا المزوّد")
+        if encrypted_records():
+            raise AssertionError("Explicit credential removal did not complete")
+        self.record("33-provider-keys-removed-without-upload")
 
     def documented_test_mode(self):
         self.tap("تجربة قياس موثقة")
@@ -583,6 +639,7 @@ class Smoke:
         self.text("خدمة التحليل")
         self.text("اختبار الاتصال")
         self.record("18-settings")
+        self.direct_provider_settings()
         self.tap("الاجتماع")
         self.text("اجتماع جديد")
         self.documented_test_mode()
