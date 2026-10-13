@@ -2,12 +2,14 @@
 """Exercise the installable APK through Android's accessibility hierarchy.
 
 This uses a fresh emulator and public Arabic UI controls for native recording,
-synthetic experiment references, and local text decoding. It does not contact
-an analysis provider or measure physical microphone, transcription,
+an unconfigured managed cloud service, synthetic experiment references, and
+local text decoding. It does not contact an analysis provider or measure
+physical microphone, transcription,
 speaker-recognition, or translation quality.
 """
 
 import argparse
+import hashlib
 import json
 import math
 import re
@@ -23,6 +25,8 @@ COMPONENT = PACKAGE + "/.MainActivity"
 DEMO_TITLE = "مثال تجريبي: إطلاق المنتج"
 CORRECTED_TEXT = "reviewed_transcript_2026"
 TEST_NOTES = "emulator_native_recorder_no_physical_microphone"
+MANAGED_PROVIDER = "google-managed"
+SERVICE_UNAVAILABLE = "خدمة التحليل غير متاحة في هذه النسخة. التسجيل محفوظ؛ حاول بعد تحديث التطبيق."
 
 
 class Smoke:
@@ -33,6 +37,7 @@ class Smoke:
         self.last_xml = None
         self.fixture_entries = {}
         self.fixtures = {}
+        self.native_audio = None
 
     def adb(self, *args, binary=False, check=True):
         completed = subprocess.run(
@@ -257,6 +262,7 @@ class Smoke:
         audio = self.adb("exec-out", "run-as", PACKAGE, "cat", path, binary=True)
         if len(audio) < 500:
             raise AssertionError("The finalized recording is unexpectedly small")
+        self.native_audio = {"path": path, "bytes": len(audio), "sha256": hashlib.sha256(audio).hexdigest()}
         recording = self.output / "native-recording.m4a"
         recording.write_bytes(audio)
         result = subprocess.run(
@@ -284,9 +290,31 @@ class Smoke:
             "resumed_timer_seconds": resumed_seconds,
             "encoded_duration_seconds": duration,
             "bytes": len(audio),
+            "sha256": self.native_audio["sha256"],
             "physical_microphone_quality_measured": False,
         }, indent=2), encoding="utf-8")
         self.record("06-native-aac-saved")
+
+    def assert_private_audio_unchanged(self):
+        if self.native_audio is None:
+            raise AssertionError("No native recording is available for the cloud failure check")
+        path = self.preferences().get("last_audio", "")
+        if path != self.native_audio["path"]:
+            raise AssertionError("A blocked cloud action lost the pending app-private recording")
+        audio = self.adb("exec-out", "run-as", PACKAGE, "cat", path, binary=True)
+        if len(audio) != self.native_audio["bytes"] or hashlib.sha256(audio).hexdigest() != self.native_audio["sha256"]:
+            raise AssertionError("A blocked cloud action changed the pending native recording")
+
+    def unavailable_dialog(self, title=None):
+        if title is not None:
+            self.text(title, scroll=False)
+        self.text(SERVICE_UNAVAILABLE, scroll=False)
+        self.text("حسنًا", scroll=False)
+        setup_or_upload = {
+            "فتح الإعدادات", "موافق، أرسل للتحليل", "موافق، أرسل النص", "موافق، ترجم النص",
+        }
+        if any(node.get("text") in setup_or_upload for node in self.snapshot().iter("node")):
+            raise AssertionError("The unavailable service offered credential setup or an upload action")
 
     def translation_without_service(self):
         self.tap("ترجمة اللقاء")
@@ -298,71 +326,117 @@ class Smoke:
         self.text("ترجمة اللقاء · en")
         self.text("إنشاء الترجمة")
         self.record("15-translation-page")
-        prefs = self.preferences()
-        if prefs.get("server_url") or prefs.get("access_token"):
-            raise AssertionError("This smoke must run without a configured analysis service")
+        if self.preferences().get("ai_provider") != MANAGED_PROVIDER:
+            raise AssertionError("Translation did not default to the managed cloud service")
         self.tap("إنشاء الترجمة")
-        self.text("أضف مفتاح API للمزوّد من الإعدادات أولًا.", scroll=False)
-        self.record("16-translation-needs-service-without-upload")
+        self.unavailable_dialog()
+        self.assert_private_audio_unchanged()
+        self.record("16-translation-cloud-unavailable")
         self.tap("حسنًا")
         self.tap("المحضر والملخص")
         self.text(DEMO_TITLE)
 
-    def direct_provider_settings(self):
-        """Exercise native KeyStore using dummy keys; never issue a provider request."""
-        dummy = "majlis_dummy_key_local_smoke_2026"
-        self.text("خدمة التحليل")
-        self.text("Gemini", scroll=False)
-        self.text("اختبار الاتصال")
+    def resummarize_without_service(self):
+        self.tap("إعادة تلخيص النص المصحح")
+        self.unavailable_dialog()
+        self.assert_private_audio_unchanged()
+        self.record("35-resummarize-cloud-unavailable")
+        self.tap("حسنًا")
+        self.text("النص تغيّر؛ المحضر يحتاج إعادة تلخيص ومراجعة.")
+        self.tap("النص الكامل")
+        self.text(CORRECTED_TEXT)
+        self.tap("المحضر والملخص")
+
+    def assert_managed_settings(self):
+        self.text("التحليل السحابي")
+        self.text(SERVICE_UNAVAILABLE)
+        self.text("فحص جاهزية الخدمة")
+        self.text("مجلس · نموذج أولي 0.6")
+        obsolete_controls = {
+            "حفظ الإعدادات", "اختبار الاتصال", "النموذج · إعداد متقدم",
+            "مسح مفتاح هذا المزوّد", "مسح رابط الخدمة ورمز الوصول",
+        }
+        seen_text = set()
         tree = self.snapshot()
-        if any("your-server" in node.get("text", "") for node in tree.iter("node")):
-            raise AssertionError("Default direct-provider setup still requires a server URL")
-        self.record("31-direct-provider-no-server")
+        for direction in ("up", "down"):
+            previous = None
+            for _ in range(18):
+                for node in tree.iter("node"):
+                    value = node.get("text", "")
+                    if value:
+                        seen_text.add(value)
+                    if node.get("class") in {"android.widget.EditText", "android.widget.Spinner"}:
+                        raise AssertionError("Managed settings exposed a credential field or provider chooser")
+                    if value in obsolete_controls or re.search(r"(?:تنزيل|تحميل)\s+(?:ال)?نموذج", value):
+                        raise AssertionError("Managed settings exposed obsolete provider or model setup")
+                signature = self.signature(tree)
+                if signature == previous or not self.scroll(direction, tree):
+                    break
+                previous = signature
+                tree = self.snapshot()
+        return seen_text
 
-        def save_dummy():
-            field = self.find(lambda n: n.get("class") == "android.widget.EditText", "provider key field")
-            self.tap_node(field)
-            self.adb("shell", "input", "keycombination", "113", "29")
-            self.adb("shell", "input", "keyevent", "67")
-            self.adb("shell", "input", "text", dummy)
-            if re.search(r"\b(?:mInputShown|mIsInputViewShown|isInputShown)=true\b", self.adb("shell", "dumpsys", "input_method")):
-                self.adb("shell", "input", "keyevent", "4")
-            self.tap("حفظ الإعدادات")
+    def managed_cloud_settings(self):
+        """Exercise the owner-unconfigured build without credentials or cloud calls."""
+        if self.preferences().get("ai_provider") != MANAGED_PROVIDER:
+            raise AssertionError("Fresh app settings did not default to the managed service")
+        self.assert_managed_settings()
+        self.record("31-managed-cloud-without-setup-fields")
+        self.tap("فحص جاهزية الخدمة")
+        self.unavailable_dialog()
+        self.assert_private_audio_unchanged()
+        self.record("32-managed-cloud-readiness-unavailable")
+        self.tap("حسنًا")
 
-        def encrypted_records():
-            raw = self.adb("exec-out", "run-as", PACKAGE, "cat", "shared_prefs/provider_secrets.xml")
-            if dummy in raw or dummy in self.adb("exec-out", "run-as", PACKAGE, "cat", "shared_prefs/majlis.xml"):
-                raise AssertionError("Provider key was stored in plaintext")
-            return {node.get("name"): node.text or "" for node in ET.fromstring(raw)}
-
-        save_dummy()
-        first = encrypted_records().get("encrypted_gemini")
-        if not first:
-            raise AssertionError("Gemini encrypted credential was not saved")
+        # Preserve all current native data while seeding an old installation's
+        # selection. These are inert test values, not user-owned credentials.
         self.adb("shell", "am", "force-stop", PACKAGE)
-        self.adb("shell", "am", "start", "-n", COMPONENT)
+        raw = self.adb("exec-out", "run-as", PACKAGE, "cat", "shared_prefs/majlis.xml")
+        prefs = ET.fromstring(raw)
+        legacy = {"ai_provider": "server", "server_url": "https://legacy-unavailable.invalid",
+                  "access_token": "legacy_dummy_token_local_smoke"}
+        for key, value in legacy.items():
+            node = next((item for item in prefs if item.get("name") == key), None)
+            if node is not None:
+                prefs.remove(node)
+            ET.SubElement(prefs, "string", {"name": key}).text = value
+        fixture = self.output / "legacy-preferences-fixture.xml"
+        fixture.write_bytes(ET.tostring(prefs, encoding="utf-8", xml_declaration=True))
+        staged = "/data/local/tmp/majlis-smoke-legacy.xml"
+        self.adb("push", str(fixture), staged)
+        self.adb("shell", "run-as", PACKAGE, "cp", staged, "shared_prefs/majlis.xml")
+        self.adb("shell", "rm", "-f", staged)
+        self.adb("shell", "am", "start", "-W", "-n", COMPONENT)
+        self.text("اجتماع جديد")
+        restored = self.preferences()
+        if restored.get("ai_provider") != MANAGED_PROVIDER:
+            raise AssertionError("An old server selection overrode the managed service after restart")
+        for key in ("server_url", "access_token"):
+            if restored.get(key) != legacy[key]:
+                raise AssertionError("Managed service migration unexpectedly deleted a legacy preference")
         self.tap("الإعدادات")
-        key_field = self.find(lambda n: n.get("class") == "android.widget.EditText", "restored key")
-        if key_field.get("text", "") in ("", "مفتاح API") or key_field.get("password") != "true":
-            raise AssertionError("Native KeyStore did not restore a masked key after restart")
-        if dummy in ET.tostring(self.snapshot(), encoding="unicode"):
-            raise AssertionError("Provider key leaked to accessibility snapshot")
-        self.record("32-encrypted-key-restored-after-restart")
-        self.tap_node(self.find(lambda n: n.get("class") == "android.widget.Spinner", "provider chooser"))
-        self.tap("OpenAI")
-        save_dummy()
-        if set(encrypted_records()) != {"encrypted_gemini", "encrypted_openai"}:
-            raise AssertionError("Both provider credentials were not retained")
-        self.tap("مسح مفتاح هذا المزوّد")
-        remaining = encrypted_records()
-        if remaining != {"encrypted_gemini": first}:
-            raise AssertionError("Removing OpenAI also altered Gemini credential")
-        self.tap_node(self.find(lambda n: n.get("class") == "android.widget.Spinner", "provider chooser"))
-        self.tap("Gemini")
-        self.tap("مسح مفتاح هذا المزوّد")
-        if encrypted_records():
-            raise AssertionError("Explicit credential removal did not complete")
-        self.record("33-provider-keys-removed-without-upload")
+        settings_text = self.assert_managed_settings()
+        if any(legacy[key] in text for key in ("server_url", "access_token") for text in settings_text):
+            raise AssertionError("Managed settings exposed retained legacy service values")
+        self.tap("فحص جاهزية الخدمة")
+        self.unavailable_dialog()
+        self.tap("حسنًا")
+        self.assert_managed_settings()
+        self.assert_private_audio_unchanged()
+        self.record("33-managed-restart-ignores-legacy-service")
+
+    def analysis_without_service(self):
+        self.text("التسجيل محفوظ على الجهاز • جاهز للتحليل")
+        self.tap("إعداد المحضر والملخص")
+        self.unavailable_dialog("الخدمة غير متاحة")
+        self.assert_private_audio_unchanged()
+        (self.output / "unavailable-cloud-audio-preserved.json").write_text(
+            json.dumps(self.native_audio, ensure_ascii=False, indent=2), encoding="utf-8"
+        )
+        self.record("34-analysis-cloud-unavailable-audio-preserved")
+        self.tap("حسنًا")
+        self.text("اجتماع جديد")
+        self.text("التسجيل محفوظ على الجهاز • جاهز للتحليل")
 
     def documented_test_mode(self):
         self.tap("تجربة قياس موثقة")
@@ -632,16 +706,17 @@ class Smoke:
         self.record("12-export-options")
         self.export_pdf()
         self.translation_without_service()
+        self.resummarize_without_service()
 
         self.tap("الأصوات")
         self.record("17-voice-profiles")
         self.tap("الإعدادات")
-        self.text("خدمة التحليل")
-        self.text("اختبار الاتصال")
+        self.assert_managed_settings()
         self.record("18-settings")
-        self.direct_provider_settings()
+        self.managed_cloud_settings()
         self.tap("الاجتماع")
         self.text("اجتماع جديد")
+        self.analysis_without_service()
         self.documented_test_mode()
         self.record("22-return-to-meeting")
         self.fixture_roster()
@@ -677,7 +752,7 @@ def main():
         raise
     finally:
         smoke.logs()
-    print("Android UI, native AAC recording, synthetic roster and local decoder smoke passed; live analysis and physical microphone/AI quality were not exercised.")
+    print("Android UI, native AAC recording, unavailable managed cloud controls, synthetic roster and local decoder smoke passed; live cloud requests and physical microphone/AI quality were not exercised.")
 
 
 if __name__ == "__main__":

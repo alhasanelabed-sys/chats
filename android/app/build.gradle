@@ -2,6 +2,22 @@ plugins {
     id 'com.android.application'
 }
 
+def operatorConfig = layout.projectDirectory.file('google-services.json')
+def generatedCloudAssets = layout.buildDirectory.dir('generated/cloud/assets')
+def modelName = providers.gradleProperty('majlisAiModel').orElse('gemini-3.5-flash-lite')
+def generateCloudConfig = tasks.register('generateCloudConfig', Exec) {
+    // An absent operator file is a valid build state, not a missing task input.
+    inputs.files(providers.provider { operatorConfig.asFile.exists() ? [operatorConfig.asFile] : [] })
+        .withPropertyName('operatorConfig')
+    inputs.file(rootProject.file('../scripts/generate-cloud-config.py'))
+    inputs.property('model', modelName)
+    outputs.file(generatedCloudAssets.map { it.file('cloud-config.json') })
+    commandLine 'python3', rootProject.file('../scripts/generate-cloud-config.py'),
+        '--input', operatorConfig.asFile,
+        '--output', generatedCloudAssets.get().file('cloud-config.json').asFile,
+        '--package', 'com.majlis.app', '--model', modelName.get()
+}
+
 android {
     namespace 'com.majlis.app'
     compileSdk 35
@@ -11,12 +27,12 @@ android {
         applicationId 'com.majlis.app'
         minSdk 26
         targetSdk 35
-        versionCode 5
-        versionName '0.5'
+        versionCode 6
+        versionName '0.6'
     }
 
     compileOptions {
-        // Java 8 bytecode keeps both the Gradle and offline SDK builds aligned.
+        // App code remains compatible with the existing pure Java test scripts.
         sourceCompatibility JavaVersion.VERSION_1_8
         targetCompatibility JavaVersion.VERSION_1_8
     }
@@ -29,4 +45,25 @@ android {
             minifyEnabled false
         }
     }
+
+    // Keep one private signing key across local builds. CI creates an ephemeral
+    // debug key unless the operator supplies the same ignored tools/debug.keystore.
+    signingConfigs {
+        debug {
+            storeFile rootProject.file('../tools/debug.keystore')
+        }
+    }
+
+    sourceSets {
+        main.assets.srcDir(generatedCloudAssets)
+    }
+}
+
+tasks.named('preBuild').configure { dependsOn(generateCloudConfig) }
+
+dependencies {
+    implementation platform('com.google.firebase:firebase-bom:35.0.0')
+    implementation 'com.google.firebase:firebase-common'
+    implementation 'com.google.firebase:firebase-appcheck-playintegrity'
+    implementation 'com.google.android.gms:play-services-tasks:18.4.0'
 }

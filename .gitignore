@@ -1,9 +1,12 @@
 # Android local setup and generated output
 android/.gradle/
 android/local.properties
+android/app/google-services.json
 android/**/build/
 .idea/
 *.iml
+*.keystore
+*.jks
 tools/
 dist/*.apk
 dist/*.apk.idsig

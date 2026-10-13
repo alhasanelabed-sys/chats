@@ -14,6 +14,7 @@ dependencyResolutionManagement {
     }
 }
 
-// Use Gradle 8.9 with a Java 17 or newer runtime (Android Studio supplies one).
+// scripts/bootstrap-gradle.sh verifies Gradle 8.9. Use a Java 17+ runtime and
+// Python 3 for the allowlisted Firebase public configuration asset generator.
 rootProject.name = 'Majlis'
 include ':app'

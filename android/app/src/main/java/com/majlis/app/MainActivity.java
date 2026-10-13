@@ -52,7 +52,7 @@ import java.util.Locale;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 
-/** A real recorder with explicitly approved provider requests. */
+/** Records privately and invokes the managed cloud only after explicit approval. */
 public class MainActivity extends Activity {
     private static final String ANALYSIS_UPDATE="com.majlis.app.ANALYSIS_UPDATE";
     private static volatile boolean analysisRunning;
@@ -126,6 +126,7 @@ public class MainActivity extends Activity {
         super.onCreate(state);
         store = new MeetingStore(this);
         prefs = getSharedPreferences("majlis",MODE_PRIVATE);
+        prefs.edit().putString("ai_provider","google-managed").apply();
         if(prefs.getBoolean("recording_incomplete",false)&&!RecordingService.isRecording()) {
             File interrupted=new File(prefs.getString("last_audio",""));
             try{if(interrupted.getCanonicalFile().getParentFile().equals(store.recordingsDir().getCanonicalFile()))interrupted.delete();}catch(Exception ignored){}
@@ -249,7 +250,7 @@ public class MainActivity extends Activity {
         content.addView(card);
         LinearLayout info=card(); info.addView(label("لتمييز الأسماء",19,INK,true));
         JSONArray voices=store.profiles();
-        info.addView(label("gemini".equals(selectedProvider())?"مع Gemini تُرقَّم الأصوات، ثم تسمّي المتحدثين بعد مراجعة النص. عينات الأسماء لا تُرسل في هذا المسار.":voices.length()==0?"أضف عينة قصيرة باسم كل مشارك من تبويب الأصوات، أو سمِّ المتحدثين بعد التحليل.":"لديك "+voices.length()+" عينات صوت مسماة ستُستخدم عند التحليل.",14,MUTED,false));
+        info.addView(label("تُرقَّم الأصوات أثناء التحليل، ثم تراجع الأسماء وتصححها في المحضر. عينات الأسماء تبقى على الهاتف ولا تُرسل إلى الخدمة.",14,MUTED,false));
         info.addView(label("من ينضم لاحقًا يظهر بعد أن يتكلم بصوت واضح. تمييز المتحدثين يجري بعد إنهاء التسجيل، وقد يحتاج تصحيحًا عند التداخل.",14,MUTED,false));
         info.addView(label("للأصوات البعيدة ضع الهاتف وسط الطاولة، أو استخدم ميكروفون اجتماعات. التطبيق لا يضمن التقاط كلام لا يصل بوضوح إلى الميكروفون.",14,MUTED,false));
         content.addView(info);
@@ -409,25 +410,28 @@ public class MainActivity extends Activity {
     private void analyze() {
         if(busy||RecordingService.isRecording())return;
         File audio=lastAudio();if(audio==null){toast("سجل الاجتماع أولًا.");return;}
-        final AiConfig ai;
+        final FirebaseCloud ai;
         try{ai=analysisConfig();}catch(Exception ex){
-            new AlertDialog.Builder(this).setTitle("إعداد خدمة التحليل")
+            new AlertDialog.Builder(this).setTitle("الخدمة غير متاحة")
                 .setMessage(ex.getMessage())
-                .setPositiveButton("فتح الإعدادات",(d,w)->showSettings()).setNegativeButton("رجوع",null).show();return;
+                .setPositiveButton("حسنًا",null).show();return;
         }
-        final JSONArray profiles="gemini".equals(ai.provider)?new JSONArray():store.profiles();
+        final JSONArray profiles=new JSONArray();
         final String title=titleField.getText().toString().trim();
         final String testNotes=prefs.getBoolean("test_mode",false)?prefs.getString("test_notes",""):null;
-        new AlertDialog.Builder(this).setTitle("إرسال الاجتماع للتحليل؟")
-            .setMessage("سيُرسل تسجيل الاجتماع و"+profiles.length()+" عينات صوت مسماة إلى:\n"+ai.destination()+"\nللتفريغ وفصل المتحدثين وإعداد محضر عربي. قد تُحتسب تكلفة على حساب صاحب المفتاح. يبقى المحضر قابلًا للمراجعة."+("gemini".equals(ai.provider)?"\nلا تُرسل عينات الأسماء إلى Gemini؛ سمِّ المتحدثين يدويًا بعد التحليل.":""))
-            .setNegativeButton("إلغاء",null).setPositiveButton("موافق، أرسل للتحليل",(d,w)->{
+        new AlertDialog.Builder(this).setTitle("تحليل الاجتماع سحابيًا؟")
+            .setMessage("سيُرسل تسجيل الاجتماع إلى Google لتفريغ الحديث وتمييز الأصوات وإعداد محضر عربي. لا تُرسل عينات الصوت المسماة. تخضع المعالجة لشروط Google وحصة الخدمة؛ راجع النتائج قبل اعتمادها. التسجيل الأصلي يبقى على هاتفك.")
+            .setNegativeButton("إلغاء",null).setPositiveButton("موافق، حلّل الاجتماع",(d,w)->{
                 if(analysisRunning)return;
                 analysisRunning=true;busy=true;prefs.edit().putString("last_title",title).apply();showMeeting();
                 worker.execute(()->{
                     try {
                         long started=android.os.SystemClock.elapsedRealtime();
-                        JSONObject analyzed=ai.server()?MeetingApi.analyze(ai.url,ai.key,audio,title,profiles):DirectAi.analyze(ai.provider,ai.key,ai.model,audio,title,profiles,audioDuration(audio));
-                        analyzed.put("_provider",ai.provider);
+                        double duration=audioDuration(audio);
+                        File prepared=CloudAudio.prepare(getApplicationContext(),audio,duration);
+                        JSONObject analyzed;
+                        try{analyzed=ai.analyze(prepared,title,profiles,duration);}finally{if(!prepared.equals(audio))prepared.delete();}
+                        analyzed.put("_provider","google-managed");
                         analyzed.put("_audio_path",audio.getAbsolutePath()); analyzed.put("_demo",false);
                         analyzed.put("_baseline_segments",new JSONArray(analyzed.getJSONArray("segments").toString()));
                         analyzed.put("_analysis_seconds",(android.os.SystemClock.elapsedRealtime()-started)/1000.0);
@@ -455,7 +459,7 @@ public class MainActivity extends Activity {
         screen="voices";shell("عينات صوت مسماة لتحسين التعرف على المشاركين");
         LinearLayout intro=card();intro.addView(label("أسماء يعرفها اجتماعك",23,INK,true));
         intro.addView(label("سجّل 5 ثوانٍ بصوت كل مشارك، بموافقته، في مكان هادئ. تُحفظ العينة على الجهاز وتُرسل فقط عند موافقتك على تحليل اجتماع. هذه عينات مرجعية، وليست إثباتًا لهوية الشخص.",14,MUTED,false));
-        intro.addView(label("يدعم مسار OpenAI حتى 4 عينات مسماة. Gemini لا يستخدم هذه العينات، ويمكن تسمية الأصوات بعد التحليل.",13,MUTED,false));
+        intro.addView(label("يمكن حفظ 4 عينات مسماة للاستماع والمراجعة محليًا. الخدمة السحابية لا تطابق الأسماء بهذه العينات؛ سمِّ المتحدثين بعد التحليل.",13,MUTED,false));
         Button add=button("إضافة عينة صوت",true,()->addVoice()); add.setEnabled(!RecordingService.isRecording()&&!busy&&store.profiles().length()<4);intro.addView(add);content.addView(intro);
         JSONArray profiles=store.profiles();
         for(int i=0;i<profiles.length();i++) {
@@ -519,30 +523,9 @@ public class MainActivity extends Activity {
             }).show();
     }
 
-    private static final class AiConfig {
-        final String provider,key,model,url;
-        AiConfig(String provider,String key,String model,String url){this.provider=provider;this.key=key;this.model=model;this.url=url;}
-        boolean server(){return "server".equals(provider);}
-        String destination(){return server()?url+" ثم OpenAI":"openai".equals(provider)?"OpenAI · api.openai.com":"Gemini · generativelanguage.googleapis.com";}
-    }
-
-    private String selectedProvider(){
-        String value=prefs.getString("ai_provider",prefs.getString("server_url","").isEmpty()?"gemini":"server");
-        return "openai".equals(value)||"server".equals(value)?value:"gemini";
-    }
-
-    private String providerModel(String provider){return prefs.getString(provider+"_model","openai".equals(provider)?"gpt-4.1-mini":"gemini-3.8-flash");}
-
-    private AiConfig analysisConfig()throws Exception{
-        String provider=selectedProvider();
-        if("server".equals(provider)){
-            String url=prefs.getString("server_url",""),key=prefs.getString("access_token","");
-            if(url.isEmpty()||key.isEmpty())throw new Exception("اضبط رابط الخدمة ورمز الوصول في الإعدادات أولًا.");
-            return new AiConfig(provider,key,"",MeetingApi.validateBaseUrl(url));
-        }
-        String key=ProviderSecrets.get(this,provider);
-        if(key.isEmpty())throw new Exception("أضف مفتاح API للمزوّد من الإعدادات أولًا.");
-        return new AiConfig(provider,key,providerModel(provider),"");
+    private FirebaseCloud analysisConfig()throws Exception{
+        if(!FirebaseCloud.configured(this))throw new Exception(FirebaseCloud.UNAVAILABLE);
+        return new FirebaseCloud(getApplicationContext());
     }
 
     private double audioDuration(File audio)throws Exception{
@@ -557,55 +540,24 @@ public class MainActivity extends Activity {
         finally{reader.release();}
     }
 
-    private void showSettings(){showSettings(selectedProvider());}
-
-    private void showSettings(final String provider) {
-        screen="settings";shell("تحليل وترجمة من هاتفك مباشرة");
-        LinearLayout card=card();card.addView(label("خدمة التحليل",23,INK,true));
-        card.addView(label("اختر Gemini أو OpenAI وأضف مفتاح API مرة واحدة. لا تحتاج عنوان خادم. التسجيل والتلخيص والترجمة تعمل من داخل مجلس بعد موافقتك على الإرسال.",14,MUTED,false));
-        Spinner choice=new Spinner(this);
-        choice.setAdapter(new ArrayAdapter<String>(this,android.R.layout.simple_spinner_dropdown_item,new String[]{"Gemini","OpenAI","خادم مجلس · إعداد متقدم"}));
-        int selection="openai".equals(provider)?1:"server".equals(provider)?2:0;choice.setSelection(selection);card.addView(choice);
-        choice.setOnItemSelectedListener(new android.widget.AdapterView.OnItemSelectedListener(){
-            public void onNothingSelected(android.widget.AdapterView<?> parent){}
-            public void onItemSelected(android.widget.AdapterView<?> parent,View view,int position,long id){String next=position==1?"openai":position==2?"server":"gemini";if(!next.equals(provider))showSettings(next);}
-        });
-        final boolean legacy="server".equals(provider);
-        final EditText url=edit("https://your-server.example",legacy?prefs.getString("server_url",""):"",false);
-        if(legacy){url.setTextDirection(View.TEXT_DIRECTION_LTR);url.setInputType(InputType.TYPE_CLASS_TEXT|InputType.TYPE_TEXT_VARIATION_URI);card.addView(url);}
-        String stored="";try{stored=legacy?prefs.getString("access_token",""):ProviderSecrets.get(this,provider);}catch(Exception ex){card.addView(label(ex.getMessage(),14,Color.rgb(161,94,12),false));}
-        final EditText key=edit(legacy?"رمز وصول الخادم":"مفتاح API",stored,true);key.setTextDirection(View.TEXT_DIRECTION_LTR);key.setSaveEnabled(false);key.setImportantForAutofill(View.IMPORTANT_FOR_AUTOFILL_NO_EXCLUDE_DESCENDANTS);card.addView(key);
-        if(!legacy){
-            card.addView(button("الحصول على مفتاح API",false,()->{try{startActivity(new Intent(Intent.ACTION_VIEW,Uri.parse("openai".equals(provider)?"https://platform.openai.com/api-keys":"https://aistudio.google.com/api-keys")));}catch(Exception ex){error("تعذر فتح المتصفح.");}}));
-            card.addView(label("قد تكون معالجة API مدفوعة أو ذات حصة محدودة بحسب حسابك. اشتراك تطبيق المحادثة لا يضمن رصيد API. يُحفظ المفتاح مشفرًا على هذا الجهاز، ولا يدخل في المحاضر أو التصدير.",13,MUTED,false));
-        }
-        card.addView(button("حفظ الإعدادات",true,()->{
-            try{
-                SharedPreferences.Editor saved=prefs.edit().putString("ai_provider",provider);
-                if(legacy){String address=MeetingApi.validateBaseUrl(url.getText().toString()),token=key.getText().toString().trim();if(token.isEmpty()||token.contains("\n")||token.contains("\r"))throw new Exception("أدخل رمز وصول صالحًا.");saved.putString("server_url",address).putString("access_token",token);}
-                else ProviderSecrets.put(this,provider,key.getText().toString());
-                if(!saved.commit())throw new Exception("تعذر حفظ اختيار المزوّد.");
-                toast("تم حفظ الإعدادات.");
-            }catch(Exception ex){error(ex.getMessage());}
-        }));
-        TextView connection=label("فحص الاتصال لا يرسل تسجيلًا أو نص اجتماع أو عينات صوت.",13,MUTED,false);card.addView(connection);
-        Button check=button("اختبار الاتصال",false,()->{});
+    private void showSettings() {
+        screen="settings";shell("التسجيل على هاتفك، والتحليل في السحابة");
+        LinearLayout card=card();card.addView(label("التحليل السحابي",23,INK,true));
+        card.addView(label("تفريغ الحديث وتمييز المتحدثين والمحضر والملخص والترجمة عبر Google. تعمل الخدمة من داخل مجلس؛ لا تحتاج إعداد اتصال أو تنزيل نماذج.",14,MUTED,false));
+        card.addView(label("لا يُرسل التسجيل عند حفظه أو استيراده. ستراجع تأكيد الإرسال قبل كل عملية تحليل أو تلخيص أو ترجمة. تحتاج المعالجة اتصالًا بالإنترنت، وقد تتوقف مؤقتًا عند بلوغ حصة الخدمة.",14,MUTED,false));
+        boolean configured=FirebaseCloud.configured(this);
+        final TextView connection=label(configured?"الخدمة مهيأة. يمكنك فحص الاتصال قبل التحليل.":FirebaseCloud.UNAVAILABLE,14,configured?TEAL:Color.rgb(161,94,12),false);card.addView(connection);
+        final Button check=button("فحص جاهزية الخدمة",false,()->{});
         check.setOnClickListener(v->{
-            final String address=url.getText().toString(),access=key.getText().toString(),model=providerModel(provider);check.setEnabled(false);connection.setText("جارٍ فحص الاتصال…");
-            worker.execute(()->{try{if(legacy)MeetingApi.status(address,access);else DirectAi.status(provider,access,model);handler.post(()->{check.setEnabled(true);connection.setText("تم قبول الاتصال. لا يثبت الفحص رصيد المعالجة أو دقة فصل الأصوات والترجمة.");});}
-                catch(Exception ex){handler.post(()->{check.setEnabled(true);connection.setText("تعذر الاتصال. راجع المفتاح وتوفر النموذج والإنترنت.");error(ex.getMessage());});}});
+            if(!FirebaseCloud.configured(this)){error(FirebaseCloud.UNAVAILABLE);return;}
+            check.setEnabled(false);connection.setText("جارٍ فحص الاتصال…");
+            worker.execute(()->{try{new FirebaseCloud(getApplicationContext()).status();handler.post(()->{check.setEnabled(true);connection.setText("نجح التحقق من اتصال التطبيق. لا يثبت الفحص توفر حصة التحليل أو دقة النتائج، ولا يرسل تسجيلًا أو نص اجتماع.");});}
+                catch(Exception ex){handler.post(()->{check.setEnabled(true);connection.setText("تعذر التحقق من الاتصال. راجع الإنترنت ثم أعد المحاولة.");error(ex.getMessage());});}});
         });card.addView(check);
-        if(!legacy)card.addView(button("النموذج · إعداد متقدم",false,()->{
-            EditText model=edit("معرّف النموذج",providerModel(provider),false);model.setTextDirection(View.TEXT_DIRECTION_LTR);
-            AlertDialog dialog=new AlertDialog.Builder(this).setTitle("نموذج التلخيص والترجمة").setView(model).setNegativeButton("إلغاء",null).setPositiveButton("حفظ",null).create();
-            dialog.setOnShowListener(d->dialog.getButton(AlertDialog.BUTTON_POSITIVE).setOnClickListener(v->{String value=model.getText().toString().trim();if(!value.matches("[A-Za-z0-9][A-Za-z0-9._-]{0,119}")){model.setError("أدخل معرّف نموذج صالحًا.");return;}prefs.edit().putString(provider+"_model",value).apply();dialog.dismiss();toast("تم حفظ النموذج.");}));dialog.show();
-        }));
-        card.addView(button(legacy?"مسح رابط الخدمة ورمز الوصول":"مسح مفتاح هذا المزوّد",false,()->{
-            try{if(legacy)prefs.edit().remove("server_url").remove("access_token").commit();else ProviderSecrets.remove(this,provider);showSettings(provider);toast("تم مسح الإعدادات المحددة.");}catch(Exception ex){error(ex.getMessage());}
-        }));
-        card.addView(label("التسجيل وعينات الصوت والمحاضر محفوظة في مساحة التطبيق الخاصة. حذف بيانات التطبيق أو إزالته يمسحها والمفاتيح. النسخ الاحتياطي التلقائي معطّل.",13,MUTED,false));content.addView(card);
-        LinearLayout about=card();about.addView(label("مجلس · نموذج أولي 0.5",18,INK,true));
-        about.addView(label("فصل المتحدثين ليس إثباتًا للهوية. راجع الأسماء والنص والقرارات والترجمة قبل اعتماد المحضر. مع Gemini تُسمّى الأصوات بعد التحليل؛ عينات الأسماء مخصصة لمسار OpenAI.",14,MUTED,false));content.addView(about);
+        card.addView(button("شروط معالجة البيانات لدى Google",false,()->{try{startActivity(new Intent(Intent.ACTION_VIEW,Uri.parse("https://ai.google.dev/gemini-api/terms")));}catch(Exception ex){error("تعذر فتح المتصفح.");}}));
+        card.addView(label("التسجيل وعينات الصوت والمحاضر محفوظة في مساحة التطبيق الخاصة. حذف بيانات التطبيق أو إزالته يمسحها. النسخ الاحتياطي التلقائي معطّل.",13,MUTED,false));content.addView(card);
+        LinearLayout about=card();about.addView(label("مجلس · نموذج أولي 0.6",18,INK,true));
+        about.addView(label("راجع أسماء المتحدثين والنص والقرارات والترجمة قبل اعتماد المحضر. تمييز الأصوات تقدير آلي؛ الأسماء تُراجع بعد التحليل، وعينات الصوت المحلية لا تُرسل في هذا المسار.",14,MUTED,false));content.addView(about);
     }
 
     private void showHistory() {
@@ -754,14 +706,14 @@ public class MainActivity extends Activity {
 
     private void resummarize(){
         if(analysisRunning||importRunning||RecordingService.isRecording())return;
-        final AiConfig ai;try{ai=analysisConfig();}catch(Exception ex){error(ex.getMessage());return;}
+        final FirebaseCloud ai;try{ai=analysisConfig();}catch(Exception ex){error(ex.getMessage());return;}
         new AlertDialog.Builder(this).setTitle("إعادة تلخيص النص المصحح؟")
-            .setMessage("سيُرسل النص وأسماء المتحدثين إلى "+ai.destination()+" لإعداد محضر جديد. هذه الخطوة لا ترسل الصوت. سيحل المحضر الجديد محل الملخص والقرارات والمهام الحالية، وتُعاد حالة إنجاز المهام. قد تحتسب تكلفة معالجة.")
+            .setMessage("سيُرسل النص وأسماء المتحدثين إلى Google لإعداد محضر جديد. لا يُرسل الصوت. سيحل المحضر الجديد محل الملخص والقرارات والمهام الحالية، وتُعاد حالة إنجاز المهام. تخضع المعالجة لحصة الخدمة وشروط Google.")
             .setNegativeButton("إلغاء",null).setPositiveButton("موافق، أرسل النص",(d,w)->{
                 if(analysisRunning)return;
                 try{final JSONObject input=new JSONObject(result.toString());analysisRunning=true;showResult();
                     worker.execute(()->{try{
-                        JSONObject updated=ai.server()?MeetingApi.summarize(ai.url,ai.key,input):DirectAi.summarize(ai.provider,ai.key,ai.model,input);
+                        JSONObject updated=ai.summarize(input);
                         for(String key:new String[]{"_id","_saved_at","_audio_path","_demo","_fixture","_baseline_segments","_analysis_seconds","_audio_bytes","_device","_capture_kind","_signal","_test_notes","_evaluation","_translations","_speech_flags","_code_notes","_provider","_provider_cleanup_pending"})if(input.has(key))updated.put(key,input.get(key));
                         invalidateTranslations(updated);
                         updated.put("_minutes_stale",false);updated.put("_summary_edited",false);store.saveMeeting(updated);
@@ -800,15 +752,15 @@ public class MainActivity extends Activity {
 
     private void requestTranslation(){
         if(analysisRunning||importRunning||RecordingService.isRecording())return;
-        final AiConfig ai;try{ai=analysisConfig();}catch(Exception ex){error(ex.getMessage());return;}
+        final FirebaseCloud ai;try{ai=analysisConfig();}catch(Exception ex){error(ex.getMessage());return;}
         final String target=translationLanguage;
         new AlertDialog.Builder(this).setTitle("إرسال النص للترجمة؟")
-            .setMessage("سيُرسل النص والمحضر وأسماء المتحدثين إلى "+ai.destination()+" للترجمة إلى "+languageName(target)+". لا يُرسل الصوت في هذه العملية. قد تُحتسب تكلفة، وتحتاج الترجمة مراجعة."+(result.optBoolean("_minutes_stale")?"\nالمحضر الحالي يحتاج إعادة تلخيص بعد تصحيح النص؛ الترجمة ستستخدم نسخته الحالية.":""))
+            .setMessage("سيُرسل النص والمحضر وأسماء المتحدثين إلى Google للترجمة إلى "+languageName(target)+". لا يُرسل الصوت. تخضع المعالجة لحصة الخدمة وشروط Google، وتحتاج الترجمة مراجعة."+(result.optBoolean("_minutes_stale")?"\nالمحضر الحالي يحتاج إعادة تلخيص بعد تصحيح النص؛ الترجمة ستستخدم نسخته الحالية.":""))
             .setNegativeButton("إلغاء",null).setPositiveButton("موافق، ترجم النص",(d,w)->{
                 if(analysisRunning)return;
                 try{final JSONObject input=new JSONObject(result.toString());analysisRunning=true;showResult();
                     worker.execute(()->{try{
-                        JSONObject translated=ai.server()?MeetingApi.translate(ai.url,ai.key,input,target):DirectAi.translate(ai.provider,ai.key,ai.model,input,target);translated.put("_stale",false);
+                        JSONObject translated=ai.translate(input,target);translated.put("_stale",false);
                         JSONObject next=new JSONObject(input.toString()),all=next.optJSONObject("_translations");if(all==null)all=new JSONObject();
                         all.put(target,translated);next.put("_translations",all);boolean stale=false;java.util.Iterator<String> keys=all.keys();while(keys.hasNext())if(all.getJSONObject(keys.next()).optBoolean("_stale"))stale=true;next.put("_translations_stale",stale);
                         store.saveMeeting(next);

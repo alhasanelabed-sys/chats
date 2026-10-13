@@ -1,3 +1,8 @@
 plugins {
     id 'com.android.application' version '8.7.3' apply false
 }
+
+// The bootstrap script pins and verifies this distribution for clean CI builds.
+if (org.gradle.util.GradleVersion.current() != org.gradle.util.GradleVersion.version('8.9')) {
+    throw new GradleException('Majlis requires Gradle 8.9; use scripts/bootstrap-gradle.sh')
+}
